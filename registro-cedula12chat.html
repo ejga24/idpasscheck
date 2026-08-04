@@ -1,0 +1,2945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de acceso · Cédula</title>
+<style>
+  :root{
+    --navy:#0B2545;
+    --navy-2:#13315C;
+    --gold:#C9A84C;
+    --red:#D21034;
+    --green:#1a7a4c;
+    --paper:#F6F4EE;
+    --ink:#1B1F27;
+    --muted:#6B7280;
+    --line:#E3DFD3;
+    --vip:#6D3AA6;
+    --vip-2:#5A2F8A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 60px;
+  }
+  .app{width:100%;max-width:480px;}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .stripe{
+    width:6px;height:34px;border-radius:3px;
+    background:linear-gradient(var(--navy) 0 33%, white 33% 66%, var(--red) 66% 100%);
+  }
+  h1{font-size:19px;margin:0;font-weight:600;letter-spacing:0.2px;}
+  h1 span{color:var(--muted);font-weight:400;font-size:13px;display:block;margin-top:2px;}
+
+  .counter{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:14px;
+    padding-left:16px;
+  }
+  .counter b{color:var(--navy);}
+
+  .tabs{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:4px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:4px;
+    margin-bottom:16px;
+  }
+  .tabs.subtabs{
+    display:flex;
+    margin-bottom:16px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:9px 2px;
+    font-size:12px;
+    font-weight:600;
+    border-radius:7px;
+    cursor:pointer;
+    color:var(--muted);
+    transition:background .15s ease, color .15s ease;
+    line-height:1.25;
+  }
+  .tab.active{background:var(--navy);color:#fff;}
+  .tab.active.salida{background:var(--red);}
+  .tab.active.vip{background:var(--vip);color:#fff;}
+
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+
+  label{
+    display:block;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  input[type=text]{
+    width:100%;
+    font-size:15px;
+    font-family:"Consolas","SFMono-Regular",Menlo,monospace;
+    padding:11px 12px;
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  input[type=text]:focus{border-color:var(--navy);}
+  input[type=date]{
+    width:100%;
+    font-size:15px;
+    font-family:inherit;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    outline:none;
+    background:#fff;
+    color:var(--ink);
+  }
+  input[type=date]:focus{border-color:var(--navy);}
+
+  textarea{
+    width:100%;
+    font-size:14px;
+    font-family:"Consolas","SFMono-Regular",Menlo,monospace;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    outline:none;
+    resize:vertical;
+    background:#fff;
+    color:var(--ink);
+    text-transform:uppercase;
+  }
+  textarea:focus{border-color:var(--navy);}
+  textarea::placeholder{text-transform:none;}
+
+  .cam-wrap{
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+    background:#000;
+    aspect-ratio:4/3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:10px;
+  }
+  .cam-wrap video{width:100%;height:100%;object-fit:cover;transform-origin:center center;transition:transform .15s ease;}
+  .cam-frame{
+    position:absolute;
+    inset:16%;
+    border:2px solid var(--gold);
+    border-radius:10px;
+    pointer-events:none;
+  }
+  .cam-frame.mrz{
+    inset:35% 8%;
+    border-color:var(--vip);
+  }
+  body.mrz-live{overflow:hidden;background:#000;}
+  .mrz-live-panel{
+    position:fixed !important;inset:0 !important;z-index:9999;margin:0 !important;
+    padding:0 !important;background:#000;color:#fff;
+  }
+  .mrz-live-panel .cam-wrap{position:absolute;inset:0;margin:0;border-radius:0;aspect-ratio:auto;}
+  .mrz-live-panel .cam-wrap video{width:100%;height:100%;object-fit:cover;}
+  .mrz-live-panel .cam-frame.mrz{
+    inset:16% 12%;border:4px solid #fff;border-radius:28px;
+    box-shadow:0 0 0 9999px rgba(0,0,0,.48);
+  }
+  .mrz-live-panel .cam-frame.mrz::before{
+    content:'Alinea el documento dentro del marco';position:absolute;left:0;right:0;top:-48px;
+    color:#fff;font-size:16px;font-weight:700;text-align:center;text-shadow:0 2px 4px #000;
+  }
+  .mrz-live-panel .cam-frame.mrz::after{
+    content:'MRZ  <<<<<<<<<<<<<<<<<<<<<<<<<<';position:absolute;left:7%;right:7%;bottom:8%;
+    height:20%;padding:6px;border:2px dashed rgba(255,255,255,.8);color:#fff;font:14px Consolas,monospace;
+    display:flex;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;
+  }
+  .mrz-live-panel .status{
+    position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:3;
+    color:#fff !important;background:rgba(0,0,0,.72);border-radius:22px;padding:9px 16px;
+    width:max-content;max-width:70%;text-align:center;
+  }
+  .mrz-live-panel .controls{position:absolute;right:18px;top:18px;z-index:4;margin:0;}
+  .mrz-live-panel .controls button{width:48px;height:48px;border-radius:50%;font-size:0;background:rgba(15,15,15,.8);border:1px solid #555;}
+  .mrz-live-panel .controls button::after{content:'✕';font-size:22px;color:#fff;}
+  .mrz-live-panel .cam-frame.mrz.valid{border-color:#35d477;box-shadow:0 0 18px #35d477,0 0 0 9999px rgba(0,0,0,.42);}
+  @media (orientation:portrait){
+    .mrz-live-panel::before{content:'Gira el teléfono horizontalmente';position:absolute;z-index:5;top:18px;left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:8px 14px;border-radius:18px;font-weight:700;white-space:nowrap;}
+  }
+  .cam-mini-toggle{
+    font-size:12px;
+    color:var(--navy);
+    text-decoration:underline;
+    cursor:pointer;
+    margin-top:8px;
+    display:inline-block;
+  }
+  .zoom-controls{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin:8px 0;
+  }
+  .zoom-controls button{
+    flex:none;
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    font-size:20px;
+    font-weight:700;
+    padding:0;
+    line-height:1;
+  }
+  .zoom-controls span{
+    font-size:14px;
+    font-weight:700;
+    color:var(--navy);
+    min-width:44px;
+    text-align:center;
+  }
+
+  select{
+    width:100%;
+    font-size:15px;
+    font-family:inherit;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    outline:none;
+    background:#fff;
+    color:var(--ink);
+  }
+  select:focus{border-color:var(--navy);}
+
+  .manual-toggle{
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--navy);
+    text-decoration:underline;
+    cursor:pointer;
+    text-align:center;
+  }
+  .manual-form{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .manual-form label{margin-top:10px;}
+  .manual-form label:first-child{margin-top:0;}
+
+  .status{margin-top:10px;font-size:12.5px;color:var(--muted);min-height:16px;}
+  .status.err{color:var(--red);}
+  .status.ok{color:var(--green);}
+  .status.warn{color:var(--gold);}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  table td{padding:9px 4px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table tr:last-child td{border-bottom:none;}
+  .col-label{
+    color:var(--muted);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    width:42%;
+  }
+  .col-value{
+    font-family:"Consolas","SFMono-Regular",Menlo,monospace;
+    font-weight:600;
+    color:var(--ink);
+    word-break:break-word;
+  }
+
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    padding:3px 9px;
+    border-radius:20px;
+    margin-top:2px;
+  }
+  .badge.in{background:#E1F5EE;color:var(--green);}
+  .badge.out{background:#FCEBEB;color:var(--red);}
+
+  .controls{display:flex;gap:10px;margin-top:14px;}
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    padding:10px 14px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--navy);
+    flex:1;
+    transition:background .15s ease, transform .1s ease;
+  }
+  button:active{transform:scale(0.98);}
+  button.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+  button.primary:hover{background:var(--navy-2);}
+  button.primary.salida{background:var(--red);border-color:var(--red);}
+  button.primary.salida:hover{background:#a80d29;}
+  button.primary.vip{background:var(--vip);border-color:var(--vip);}
+  button.primary.vip:hover{background:var(--vip-2);}
+  button:hover{background:#faf9f6;}
+  button:disabled{opacity:0.5;cursor:default;}
+
+  .thanks{text-align:center;padding:20px 6px 6px;}
+  .thanks .check{
+    width:52px;height:52px;border-radius:50%;
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px;margin:0 auto 14px;
+  }
+  .thanks .check.in{background:var(--navy);}
+  .thanks .check.out{background:var(--red);}
+  .thanks .check.vip{background:var(--vip);}
+  .thanks h2{margin:0 0 6px;font-size:18px;color:var(--navy);}
+  .thanks p{margin:0;font-size:13.5px;color:var(--muted);}
+  .hidden{display:none !important;}
+
+  .queue-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--navy);
+    user-select:none;
+  }
+  .queue-header b{color:var(--muted);font-weight:600;}
+  .queue-header span:last-child{
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+  }
+  #queueBody{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .queue-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .queue-row:last-child{border-bottom:none;}
+  .queue-name{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .queue-meta{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .queue-empty{font-size:13px;color:var(--muted);padding:6px 0;}
+
+  .metric-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .metric{
+    background:var(--paper);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .metric .label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .metric .value{
+    font-size:22px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .card h3{
+    font-size:13px;
+    margin:0 0 10px;
+    color:var(--navy);
+    font-weight:700;
+  }
+  .live-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .live-row:last-child{border-bottom:none;}
+  .live-name{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .live-timer{font-size:12.5px;font-weight:700;color:var(--green);white-space:nowrap;}
+  .activity-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+  }
+  .activity-row:last-child{border-bottom:none;}
+  .dot{
+    width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  }
+  .dot.in{background:var(--green);}
+  .dot.out{background:var(--red);}
+  .activity-text{flex:1;color:var(--ink);}
+  .activity-text b{font-weight:600;}
+  .activity-time{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+
+  .export-hint{
+    font-size:12px;
+    color:var(--muted);
+    margin:0 0 10px;
+  }
+  .export-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .export-row:last-child{margin-bottom:0;}
+  .export-row button{
+    background:var(--paper);
+    border-color:var(--line);
+  }
+
+  .date-range{
+    display:flex;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .date-range > div{flex:1;}
+  .date-range label{margin-bottom:4px;}
+
+  .stat-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:6px 0;
+  }
+  .stat-label{font-size:13.5px;color:var(--ink);}
+  .stat-value{font-size:18px;font-weight:700;color:var(--navy);}
+  .stat-subhead{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--muted);
+    margin:14px 0 6px;
+    border-top:1px solid var(--line);
+    padding-top:12px;
+  }
+  .stat-bar-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 0;
+    font-size:13px;
+  }
+  .stat-bar-label{width:78px;flex-shrink:0;color:var(--muted);}
+  .stat-bar-track{
+    flex:1;
+    background:var(--paper);
+    border-radius:6px;
+    height:16px;
+    overflow:hidden;
+  }
+  .stat-bar-fill{
+    height:100%;
+    background:var(--navy);
+    border-radius:6px;
+  }
+  .stat-bar-count{
+    width:28px;
+    text-align:right;
+    font-weight:600;
+    flex-shrink:0;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="stripe"></div>
+    <h1>Control de acceso<span>Registro de entrada y salida por cédula</span></h1>
+  </header>
+
+  <div class="counter">Personas dentro: <b id="insideCount">0</b></div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabEntrada" data-tab="entrada">Entrada</div>
+    <div class="tab" id="tabSalida" data-tab="salida">Salida</div>
+    <div class="tab" id="tabEntradaVip" data-tab="entradaVip">Entrada VIP</div>
+    <div class="tab" id="tabSalidaVip" data-tab="salidaVip">Salida VIP</div>
+    <div class="tab" id="tabDashboard" data-tab="dashboard">Dashboard</div>
+  </div>
+
+  <!-- PANEL ENTRADA -->
+  <div id="panelEntrada">
+    <div class="card" id="scanCardIn">
+      <label for="qrInputIn">Campo de lectura</label>
+      <input type="text" id="qrInputIn" placeholder="Escanea aquí…" autofocus>
+      <div class="status" id="statusIn">Coloca el cursor en el campo y escanea.</div>
+
+      <div id="resultBlockIn" class="hidden">
+        <table id="dataTableIn" style="margin-top:14px;"></table>
+
+        <label for="motivoVisitaIn" style="margin-top:14px;">Motivo de la visita</label>
+        <select id="motivoVisitaIn">
+          <option value="">Selecciona un motivo…</option>
+          <option value="Trámite de pasaporte">Trámite de pasaporte</option>
+          <option value="Mensajería">Mensajería</option>
+          <option value="Otros">Otros</option>
+        </select>
+        <div class="status" id="statusMotivoIn"></div>
+
+        <div class="controls">
+          <button id="btnClearIn">Limpiar</button>
+          <button class="primary" id="btnConfirmIn">Aceptar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="manualToggleIn">¿No tiene código QR? Ingresar datos manualmente</div>
+
+      <div id="manualFormIn" class="manual-form hidden">
+        <label for="mCedula">Cédula</label>
+        <input type="text" id="mCedula" placeholder="4-750-398">
+
+        <label for="mNombres">Nombres</label>
+        <input type="text" id="mNombres" placeholder="Eliel Jusseim">
+
+        <label for="mApellidos">Apellidos</label>
+        <input type="text" id="mApellidos" placeholder="Gonzalez Atencio">
+
+        <label for="mSexo">Sexo</label>
+        <select id="mSexo">
+          <option value="">–</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+
+        <label for="mLugar">Lugar de nacimiento</label>
+        <input type="text" id="mLugar" placeholder="Chiriquí, David">
+
+        <label for="mFechaNac">Fecha de nacimiento</label>
+        <input type="date" id="mFechaNac" max="9999-12-31">
+
+        <label for="mNacionalidad">Nacionalidad</label>
+        <input type="text" id="mNacionalidad" placeholder="Panameña">
+
+        <label for="mMotivo">Motivo de la visita</label>
+        <select id="mMotivo">
+          <option value="">Selecciona un motivo…</option>
+          <option value="Trámite de pasaporte">Trámite de pasaporte</option>
+          <option value="Mensajería">Mensajería</option>
+          <option value="Otros">Otros</option>
+        </select>
+
+        <div class="status" id="statusManualIn"></div>
+        <div class="controls">
+          <button id="btnManualCancelIn">Cancelar</button>
+          <button class="primary" id="btnManualSubmitIn">Continuar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="mrzToggleIn">¿Es extranjero? Leer pasaporte (MRZ)</div>
+
+      <div id="mrzFormIn" class="manual-form hidden">
+        <label for="mrzTextIn">Pega o escanea las 2 líneas del MRZ del pasaporte</label>
+        <textarea id="mrzTextIn" rows="3" placeholder="P<PANRODRIGUEZ<<JUAN<<<<<<<<<<<<<<<<<<<<<<<&#10;P123456784PAN8501014M3001013<<<<<<<<<<<<<<04"></textarea>
+        <span class="cam-mini-toggle" id="mrzCamToggleIn">📷 Usar cámara (OCR)</span>
+        <div id="mrzCamBlockIn" class="hidden" style="margin-top:8px;">
+          <div class="cam-wrap">
+            <video id="mrzCamVideoIn" playsinline muted></video>
+            <div class="cam-frame mrz"></div>
+          </div>
+          <canvas id="mrzCamCanvasIn" class="hidden"></canvas>
+          <div class="status" id="statusMrzCamIn"></div>
+          <div class="controls">
+            <button id="btnMrzCamCaptureIn">Capturar</button>
+          </div>
+        </div>
+        <div class="status" id="statusMrzIn"></div>
+        <div class="controls">
+          <button id="btnMrzCancelIn">Cancelar</button>
+          <button class="primary" id="btnMrzSubmitIn">Procesar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="camToggleIn">📷 Usar cámara para leer QR</div>
+
+      <div id="camFormIn" class="manual-form hidden">
+        <select id="camDeviceSelectIn" class="hidden" style="margin-bottom:8px;"></select>
+        <div class="cam-wrap">
+          <video id="camVideoIn" playsinline muted></video>
+          <div class="cam-frame"></div>
+        </div>
+        <div class="zoom-controls">
+          <button id="btnZoomOutIn" type="button">−</button>
+          <span id="zoomLevelIn">1.0x</span>
+          <button id="btnZoomInIn" type="button">+</button>
+        </div>
+        <canvas id="camCanvasIn" class="hidden"></canvas>
+        <div class="status" id="statusCamIn"></div>
+        <div class="controls">
+          <button id="btnCamRefocusIn">🔄 Reenfocar</button>
+          <button id="btnCamCancelIn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="thanksCardIn">
+      <div class="thanks">
+        <div class="check in" id="thanksIconIn">✓</div>
+        <h2 id="thanksNameIn">Gracias por registrarte</h2>
+        <p id="thanksSubIn">Quedaste registrado como presente.</p>
+      </div>
+      <div class="controls">
+        <button id="btnAgainIn">Registrar otra cédula</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="queue-header" id="queueToggle">
+        <span>Personas registradas <b id="queueCount">(0)</b></span>
+        <span id="queueChevron">Mostrar ▾</span>
+      </div>
+      <div id="queueBody" class="hidden">
+        <div id="queueList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL SALIDA -->
+  <div id="panelSalida" class="hidden">
+    <div class="card" id="scanCardOut">
+      <label for="qrInputOut">Campo de lectura</label>
+      <input type="text" id="qrInputOut" placeholder="Escanea aquí…">
+      <div class="status" id="statusOut">Coloca el cursor en el campo y escanea.</div>
+
+      <div id="resultBlockOut" class="hidden">
+        <table id="dataTableOut" style="margin-top:14px;"></table>
+        <div class="controls">
+          <button id="btnClearOut">Limpiar</button>
+          <button class="primary salida hidden" id="btnConfirmOut">Confirmar salida</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="manualToggleOut">¿No tiene código QR? Buscar por número de cédula</div>
+
+      <div id="manualFormOut" class="manual-form hidden">
+        <label for="mCedulaOut">Número de cédula</label>
+        <input type="text" id="mCedulaOut" placeholder="4-750-398">
+        <div class="controls">
+          <button id="btnManualCancelOut">Cancelar</button>
+          <button class="primary salida" id="btnManualSubmitOut">Buscar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="mrzToggleOut">¿Es extranjero? Buscar por pasaporte (MRZ)</div>
+
+      <div id="mrzFormOut" class="manual-form hidden">
+        <label for="mrzTextOut">Pega o escanea las 2 líneas del MRZ del pasaporte</label>
+        <textarea id="mrzTextOut" rows="3" placeholder="P<PANRODRIGUEZ<<JUAN<<<<<<<<<<<<<<<<<<<<<<<&#10;P123456784PAN8501014M3001013<<<<<<<<<<<<<<04"></textarea>
+        <span class="cam-mini-toggle" id="mrzCamToggleOut">📷 Usar cámara (OCR)</span>
+        <div id="mrzCamBlockOut" class="hidden" style="margin-top:8px;">
+          <div class="cam-wrap">
+            <video id="mrzCamVideoOut" playsinline muted></video>
+            <div class="cam-frame mrz"></div>
+          </div>
+          <canvas id="mrzCamCanvasOut" class="hidden"></canvas>
+          <div class="status" id="statusMrzCamOut"></div>
+          <div class="controls">
+            <button id="btnMrzCamCaptureOut">Capturar</button>
+          </div>
+        </div>
+        <div class="status" id="statusMrzOut"></div>
+        <div class="controls">
+          <button id="btnMrzCancelOut">Cancelar</button>
+          <button class="primary salida" id="btnMrzSubmitOut">Buscar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="camToggleOut">📷 Usar cámara para leer QR</div>
+
+      <div id="camFormOut" class="manual-form hidden">
+        <select id="camDeviceSelectOut" class="hidden" style="margin-bottom:8px;"></select>
+        <div class="cam-wrap">
+          <video id="camVideoOut" playsinline muted></video>
+          <div class="cam-frame"></div>
+        </div>
+        <div class="zoom-controls">
+          <button id="btnZoomOutOut" type="button">−</button>
+          <span id="zoomLevelOut">1.0x</span>
+          <button id="btnZoomInOut" type="button">+</button>
+        </div>
+        <canvas id="camCanvasOut" class="hidden"></canvas>
+        <div class="status" id="statusCamOut"></div>
+        <div class="controls">
+          <button id="btnCamRefocusOut">🔄 Reenfocar</button>
+          <button id="btnCamCancelOut">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="thanksCardOut">
+      <div class="thanks">
+        <div class="check out">✓</div>
+        <h2 id="thanksNameOut">Salida registrada</h2>
+        <p id="thanksSubOut">Quedaste marcado como retirado.</p>
+      </div>
+      <div class="controls">
+        <button id="btnAgainOut">Registrar otra salida</button>
+      </div>
+    </div>
+  </div>
+
+<!-- PANEL ENTRADA VIP -->
+  <div id="panelEntradaVip" class="hidden">
+    <div class="card" id="scanCardInVip">
+      <label for="qrInputInVip">Campo de lectura</label>
+      <input type="text" id="qrInputInVip" placeholder="Escanea aquí…">
+      <div class="status" id="statusInVip">Coloca el cursor en el campo y escanea.</div>
+
+      <div id="resultBlockInVip" class="hidden">
+        <table id="dataTableInVip" style="margin-top:14px;"></table>
+
+        <label for="motivoVisitaInVip" style="margin-top:14px;">Motivo de la visita</label>
+        <select id="motivoVisitaInVip">
+          <option value="">Selecciona un motivo…</option>
+          <option value="Trámite de pasaporte">Trámite de pasaporte</option>
+          <option value="Mensajería">Mensajería</option>
+          <option value="Otros">Otros</option>
+        </select>
+        <div class="status" id="statusMotivoInVip"></div>
+
+        <div class="controls">
+          <button id="btnClearInVip">Limpiar</button>
+          <button class="primary vip" id="btnConfirmInVip">Aceptar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="manualToggleInVip">¿No tiene código QR? Ingresar datos manualmente</div>
+
+      <div id="manualFormInVip" class="manual-form hidden">
+        <label for="mCedulaVip">Cédula</label>
+        <input type="text" id="mCedulaVip" placeholder="4-750-398">
+
+        <label for="mNombresVip">Nombres</label>
+        <input type="text" id="mNombresVip" placeholder="Eliel Jusseim">
+
+        <label for="mApellidosVip">Apellidos</label>
+        <input type="text" id="mApellidosVip" placeholder="Gonzalez Atencio">
+
+        <label for="mSexoVip">Sexo</label>
+        <select id="mSexoVip">
+          <option value="">–</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+
+        <label for="mLugarVip">Lugar de nacimiento</label>
+        <input type="text" id="mLugarVip" placeholder="Chiriquí, David">
+
+        <label for="mFechaNacVip">Fecha de nacimiento</label>
+        <input type="date" id="mFechaNacVip" max="9999-12-31">
+
+        <label for="mNacionalidadVip">Nacionalidad</label>
+        <input type="text" id="mNacionalidadVip" placeholder="Panameña">
+
+        <label for="mMotivoVip">Motivo de la visita</label>
+        <select id="mMotivoVip">
+          <option value="">Selecciona un motivo…</option>
+          <option value="Trámite de pasaporte">Trámite de pasaporte</option>
+          <option value="Mensajería">Mensajería</option>
+          <option value="Otros">Otros</option>
+        </select>
+
+        <div class="status" id="statusManualInVip"></div>
+        <div class="controls">
+          <button id="btnManualCancelInVip">Cancelar</button>
+          <button class="primary vip" id="btnManualSubmitInVip">Continuar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="mrzToggleInVip">¿Es extranjero? Leer pasaporte (MRZ)</div>
+
+      <div id="mrzFormInVip" class="manual-form hidden">
+        <label for="mrzTextInVip">Pega o escanea las 2 líneas del MRZ del pasaporte</label>
+        <textarea id="mrzTextInVip" rows="3" placeholder="P<PANRODRIGUEZ<<JUAN<<<<<<<<<<<<<<<<<<<<<<<&#10;P123456784PAN8501014M3001013<<<<<<<<<<<<<<04"></textarea>
+        <span class="cam-mini-toggle" id="mrzCamToggleInVip">📷 Usar cámara (OCR)</span>
+        <div id="mrzCamBlockInVip" class="hidden" style="margin-top:8px;">
+          <div class="cam-wrap">
+            <video id="mrzCamVideoInVip" playsinline muted></video>
+            <div class="cam-frame mrz"></div>
+          </div>
+          <canvas id="mrzCamCanvasInVip" class="hidden"></canvas>
+          <div class="status" id="statusMrzCamInVip"></div>
+          <div class="controls">
+            <button id="btnMrzCamCaptureInVip">Capturar</button>
+          </div>
+        </div>
+        <div class="status" id="statusMrzInVip"></div>
+        <div class="controls">
+          <button id="btnMrzCancelInVip">Cancelar</button>
+          <button class="primary vip" id="btnMrzSubmitInVip">Procesar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="camToggleInVip">📷 Usar cámara para leer QR</div>
+
+      <div id="camFormInVip" class="manual-form hidden">
+        <select id="camDeviceSelectInVip" class="hidden" style="margin-bottom:8px;"></select>
+        <div class="cam-wrap">
+          <video id="camVideoInVip" playsinline muted></video>
+          <div class="cam-frame"></div>
+        </div>
+        <div class="zoom-controls">
+          <button id="btnZoomOutInVip" type="button">−</button>
+          <span id="zoomLevelInVip">1.0x</span>
+          <button id="btnZoomInInVip" type="button">+</button>
+        </div>
+        <canvas id="camCanvasInVip" class="hidden"></canvas>
+        <div class="status" id="statusCamInVip"></div>
+        <div class="controls">
+          <button id="btnCamRefocusInVip">🔄 Reenfocar</button>
+          <button id="btnCamCancelInVip">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="thanksCardInVip">
+      <div class="thanks">
+        <div class="check vip" id="thanksIconInVip">✓</div>
+        <h2 id="thanksNameInVip">Gracias por registrarte</h2>
+        <p id="thanksSubInVip">Quedaste registrado como presente.</p>
+      </div>
+      <div class="controls">
+        <button id="btnAgainInVip">Registrar otra cédula</button>
+      </div>
+    </div>
+  </div>
+
+<!-- PANEL SALIDA VIP -->
+  <div id="panelSalidaVip" class="hidden">
+    <div class="card" id="scanCardOutVip">
+      <label for="qrInputOutVip">Campo de lectura</label>
+      <input type="text" id="qrInputOutVip" placeholder="Escanea aquí…">
+      <div class="status" id="statusOutVip">Coloca el cursor en el campo y escanea.</div>
+
+      <div id="resultBlockOutVip" class="hidden">
+        <table id="dataTableOutVip" style="margin-top:14px;"></table>
+        <div class="controls">
+          <button id="btnClearOutVip">Limpiar</button>
+          <button class="primary vip hidden" id="btnConfirmOutVip">Confirmar salida</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="manualToggleOutVip">¿No tiene código QR? Buscar por número de cédula</div>
+
+      <div id="manualFormOutVip" class="manual-form hidden">
+        <label for="mCedulaOutVip">Número de cédula</label>
+        <input type="text" id="mCedulaOutVip" placeholder="4-750-398">
+        <div class="controls">
+          <button id="btnManualCancelOutVip">Cancelar</button>
+          <button class="primary vip" id="btnManualSubmitOutVip">Buscar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="mrzToggleOutVip">¿Es extranjero? Buscar por pasaporte (MRZ)</div>
+
+      <div id="mrzFormOutVip" class="manual-form hidden">
+        <label for="mrzTextOutVip">Pega o escanea las 2 líneas del MRZ del pasaporte</label>
+        <textarea id="mrzTextOutVip" rows="3" placeholder="P<PANRODRIGUEZ<<JUAN<<<<<<<<<<<<<<<<<<<<<<<&#10;P123456784PAN8501014M3001013<<<<<<<<<<<<<<04"></textarea>
+        <span class="cam-mini-toggle" id="mrzCamToggleOutVip">📷 Usar cámara (OCR)</span>
+        <div id="mrzCamBlockOutVip" class="hidden" style="margin-top:8px;">
+          <div class="cam-wrap">
+            <video id="mrzCamVideoOutVip" playsinline muted></video>
+            <div class="cam-frame mrz"></div>
+          </div>
+          <canvas id="mrzCamCanvasOutVip" class="hidden"></canvas>
+          <div class="status" id="statusMrzCamOutVip"></div>
+          <div class="controls">
+            <button id="btnMrzCamCaptureOutVip">Capturar</button>
+          </div>
+        </div>
+        <div class="status" id="statusMrzOutVip"></div>
+        <div class="controls">
+          <button id="btnMrzCancelOutVip">Cancelar</button>
+          <button class="primary vip" id="btnMrzSubmitOutVip">Buscar</button>
+        </div>
+      </div>
+
+      <div class="manual-toggle" id="camToggleOutVip">📷 Usar cámara para leer QR</div>
+
+      <div id="camFormOutVip" class="manual-form hidden">
+        <select id="camDeviceSelectOutVip" class="hidden" style="margin-bottom:8px;"></select>
+        <div class="cam-wrap">
+          <video id="camVideoOutVip" playsinline muted></video>
+          <div class="cam-frame"></div>
+        </div>
+        <div class="zoom-controls">
+          <button id="btnZoomOutOutVip" type="button">−</button>
+          <span id="zoomLevelOutVip">1.0x</span>
+          <button id="btnZoomInOutVip" type="button">+</button>
+        </div>
+        <canvas id="camCanvasOutVip" class="hidden"></canvas>
+        <div class="status" id="statusCamOutVip"></div>
+        <div class="controls">
+          <button id="btnCamRefocusOutVip">🔄 Reenfocar</button>
+          <button id="btnCamCancelOutVip">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="thanksCardOutVip">
+      <div class="thanks">
+        <div class="check vip">✓</div>
+        <h2 id="thanksNameOutVip">Salida registrada</h2>
+        <p id="thanksSubOutVip">Quedaste marcado como retirado.</p>
+      </div>
+      <div class="controls">
+        <button id="btnAgainOutVip">Registrar otra salida</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DASHBOARD -->
+  <div id="panelDashboard" class="hidden">
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="label">Dentro ahora</div>
+        <div class="value" id="mDentro">0</div>
+      </div>
+      <div class="metric">
+        <div class="label">Entradas hoy (Normal)</div>
+        <div class="value" id="mEntradasHoyNormal">0</div>
+      </div>
+      <div class="metric">
+        <div class="label">Entradas hoy (VIP)</div>
+        <div class="value" id="mEntradasHoyVip">0</div>
+      </div>
+      <div class="metric">
+        <div class="label">Salidas hoy</div>
+        <div class="value" id="mSalidasHoy">0</div>
+      </div>
+      <div class="metric">
+        <div class="label">Promedio hoy</div>
+        <div class="value" id="mPromedioHoy">–</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Actualmente dentro</h3>
+      <div id="liveList"></div>
+    </div>
+
+    <div class="card">
+      <h3>Actividad reciente</h3>
+      <div id="activityList"></div>
+    </div>
+
+    <div class="card">
+      <h3>Estadísticas</h3>
+      <div class="stat-row">
+        <span class="stat-label">Promedio de entradas por día</span>
+        <span class="stat-value" id="statPromedioDiario">–</span>
+      </div>
+      <h4 class="stat-subhead">Por edad</h4>
+      <div id="statEdades"></div>
+      <h4 class="stat-subhead">Por tipo de documento</h4>
+      <div id="statDocumentos"></div>
+    </div>
+
+    <div class="card">
+      <h3>Exportar reportes</h3>
+      <p class="export-hint">Descarga archivos CSV que se abren directo en Excel.</p>
+
+      <div class="date-range">
+        <div>
+          <label for="exportDesde">Desde</label>
+          <input type="date" id="exportDesde">
+        </div>
+        <div>
+          <label for="exportHasta">Hasta</label>
+          <input type="date" id="exportHasta">
+        </div>
+      </div>
+
+      <div class="export-row">
+        <button id="btnExportHoy">Actividad (rango)</button>
+        <button id="btnExportHistorial">Historial (rango)</button>
+      </div>
+      <div class="export-row">
+        <button id="btnExportBitacora">Exportar todo (sin filtro)</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'control_acceso_cedulas';
+const HISTORIAL_KEY = 'control_acceso_historial';
+
+function loadHistorial(){
+  try{
+    return JSON.parse(localStorage.getItem(HISTORIAL_KEY)) || [];
+  }catch(e){
+    return [];
+  }
+}
+function saveHistorial(historial){
+  localStorage.setItem(HISTORIAL_KEY, JSON.stringify(historial));
+}
+
+const EVENTOS_KEY = 'control_acceso_eventos';
+function loadEventos(){
+  try{
+    return JSON.parse(localStorage.getItem(EVENTOS_KEY)) || [];
+  }catch(e){
+    return [];
+  }
+}
+function saveEventos(eventos){
+  // conserva solo los últimos 500 para no llenar el almacenamiento
+  localStorage.setItem(EVENTOS_KEY, JSON.stringify(eventos.slice(-500)));
+}
+function addEvento(evento){
+  const eventos = loadEventos();
+  eventos.push(evento);
+  saveEventos(eventos);
+}
+function isToday(ts){
+  const d = new Date(ts);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() &&
+         d.getMonth() === now.getMonth() &&
+         d.getDate() === now.getDate();
+}
+
+function loadDb(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  }catch(e){
+    return {};
+  }
+}
+function saveDb(db){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+function formatDuration(ms){
+  const totalMin = Math.max(0, Math.round(ms / 60000));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if(h <= 0) return m + ' min';
+  return h + 'h ' + m + 'min';
+}
+function updateInsideCount(){
+  const db = loadDb();
+  const count = Object.values(db).filter(r => r.estado === 'dentro').length;
+  document.getElementById('insideCount').textContent = count;
+}
+
+function renderQueue(){
+  const db = loadDb();
+  const dentro = Object.values(db)
+    .filter(r => r.estado === 'dentro')
+    .sort((a, b) => (a.horaEntrada || '').localeCompare(b.horaEntrada || ''));
+
+  document.getElementById('queueCount').textContent = '(' + dentro.length + ')';
+  const list = document.getElementById('queueList');
+  list.innerHTML = '';
+
+  if(!dentro.length){
+    list.innerHTML = '<div class="queue-empty">Todavía no hay nadie registrado.</div>';
+    return;
+  }
+
+  dentro.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'queue-row';
+    const name = document.createElement('span');
+    name.className = 'queue-name';
+    const vipTag = r.tipoVisita === 'VIP' ? ' ⭐VIP' : '';
+    name.textContent = ([r['Nombres'] || '', r['Apellidos'] || ''].join(' ').trim() || r['Cédula']) + vipTag;
+    const meta = document.createElement('span');
+    meta.className = 'queue-meta';
+    meta.textContent = (r['Cédula'] || '') + (r.motivoVisita ? ' · ' + r.motivoVisita : '') + ' · ' + (r.horaEntrada || '');
+    row.appendChild(name);
+    row.appendChild(meta);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('queueToggle').addEventListener('click', () => {
+  const body = document.getElementById('queueBody');
+  const chevron = document.getElementById('queueChevron');
+  const willShow = body.classList.contains('hidden');
+  body.classList.toggle('hidden');
+  chevron.textContent = willShow ? 'Ocultar ▴' : 'Mostrar ▾';
+});
+
+function labelize(key){
+  return key
+    .replace(/[_\-]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function fixDate(v){
+  if(/^\d{1,2}'\d{1,2}'\d{4}$/.test(v)) return v.replace(/'/g, '/');
+  return v;
+}
+// El lector QR omite por completo la letra con tilde/diéresis de cada palabra
+// (no la deja sin tilde: la borra). Este mapa reconstruye el nombre completo
+// de cada provincia, comarca y nacionalidad de Panamá a partir de esa forma recortada.
+const ENCODING_FIX_MAP = {
+  'CHIRIQU': 'CHIRIQUÍ',        // Chiriquí
+  'COCL': 'COCLÉ',              // Coclé
+  'COLN': 'COLÓN',              // Colón
+  'DARIN': 'DARIÉN',            // Darién
+  'PANAM': 'PANAMÁ',            // Panamá / Panamá Oeste
+  'PANAMEA': 'PANAMEÑA',        // nacionalidad, femenino
+  'PANAMEO': 'PANAMEÑO',        // nacionalidad, masculino
+  'EMBER': 'EMBERÁ',            // comarca Emberá-Wounaan
+  'NGBE': 'NGÄBE',              // comarca Ngäbe-Buglé
+  'BUGL': 'BUGLÉ',              // comarca Ngäbe-Buglé
+  'MADUGAND': 'MADUGANDÍ',      // comarca Guna de Madugandí
+  'WARGAND': 'WARGANDÍ'         // comarca Guna de Wargandí
+  // Bocas del Toro, Herrera, Los Santos, Veraguas y Guna Yala no llevan
+  // tilde en ninguna letra, así que el QR ya las entrega completas.
+};
+
+// ===== Detector nativo del navegador (usa el motor del sistema operativo,
+// normalmente mucho más robusto que las librerías JS puras). Disponible en
+// Chrome/Android y algunos Chrome de escritorio; no existe en Safari/iOS,
+// donde se usa jsQR como respaldo automático. =====
+window.__nativeBarcodeDetector = null;
+if('BarcodeDetector' in window){
+  BarcodeDetector.getSupportedFormats().then(formatos => {
+    if(formatos.includes('qr_code')){
+      window.__nativeBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    }
+  }).catch(() => { /* si falla, sigue funcionando con jsQR */ });
+}
+
+// ===== Carga perezosa de librerías externas (solo cuando se usan por primera vez) =====
+let jsQRPromise = null;
+function cargarJsQR(){
+  if(window.jsQR) return Promise.resolve();
+  if(jsQRPromise) return jsQRPromise;
+  jsQRPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('No se pudo cargar el lector de QR (revisa la conexión a internet).'));
+    document.head.appendChild(script);
+  });
+  return jsQRPromise;
+}
+
+let zbarWasmPromise = null;
+function cargarZbarWasm(){
+  if(window.zbarWasm) return Promise.resolve();
+  if(zbarWasmPromise) return zbarWasmPromise;
+  zbarWasmPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@0.11.0/dist/index.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('No se pudo cargar el lector ZBar (revisa la conexión a internet).'));
+    document.head.appendChild(script);
+  });
+  return zbarWasmPromise;
+}
+
+let tesseractPromise = null;
+function cargarTesseract(){
+  if(window.Tesseract) return Promise.resolve();
+  if(tesseractPromise) return tesseractPromise;
+  tesseractPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('No se pudo cargar el motor de OCR (revisa la conexión a internet).'));
+    document.head.appendChild(script);
+  });
+  return tesseractPromise;
+}
+
+// ===== Grupo de opciones mutuamente excluyentes (manual / MRZ / cámara, etc.) =====
+// Al abrir una opción se ocultan los demás enlaces; al cerrarla (Cancelar, éxito,
+// o clic de nuevo) todos los enlaces del grupo vuelven a mostrarse.
+function crearGrupoExclusivo(opciones){
+  function cerrarTodasMenos(idxAbierto){
+    opciones.forEach((op, i) => {
+      if(i !== idxAbierto) op.toggle.classList.remove('hidden');
+    });
+  }
+  function abrir(idx){
+    opciones.forEach((op, i) => {
+      if(i === idx){
+        op.form.classList.remove('hidden');
+        op.toggle.textContent = op.textoAbierto;
+      }else{
+        op.toggle.classList.add('hidden');
+      }
+    });
+    if(opciones[idx].alAbrir) opciones[idx].alAbrir();
+  }
+  function cerrar(idx){
+    opciones[idx].form.classList.add('hidden');
+    opciones[idx].toggle.textContent = opciones[idx].textoCerrado;
+    if(opciones[idx].alCerrar) opciones[idx].alCerrar();
+    cerrarTodasMenos(-1);
+  }
+  opciones.forEach((op, idx) => {
+    op.toggle.addEventListener('click', () => {
+      if(op.form.classList.contains('hidden')) abrir(idx);
+      else cerrar(idx);
+    });
+  });
+  return { abrir, cerrar };
+}
+
+function fixEncoding(v){
+  let result = v;
+  Object.keys(ENCODING_FIX_MAP)
+    .sort((a, b) => b.length - a.length) // primero las claves más largas
+    .forEach(key => {
+      const re = new RegExp('\\b' + key + '\\b', 'gi');
+      result = result.replace(re, ENCODING_FIX_MAP[key]);
+    });
+  return result;
+}
+function formatDateInput(value){
+  // convierte el valor de <input type="date"> (AAAA-MM-DD) a DD/MM/AAAA
+  if(!value) return '';
+  const [y, m, d] = value.split('-');
+  return d + '/' + m + '/' + y;
+}
+
+// Formato de la cédula panameña que lee la pistola: campos separados por "]".
+// Los primeros campos (cédula, nombres, apellidos, sexo) son estables,
+// pero algunas cédulas traen "Lugar de nacimiento" y "Fecha de nacimiento"
+// juntos en un solo campo separados por "|" (ej. "PANAM,PANAM|28'02'1992"),
+// y la cantidad total de campos vacíos en el medio varía de una cédula a otra.
+// Por eso los últimos tres campos (expedición, vencimiento, código) se
+// calculan contando desde el FINAL del arreglo, no desde una posición fija.
+function parseCedulaBracketFormat(text){
+  const parts = text.split(']').map(p => p.trim());
+  if(parts.length < 10) return null;
+
+  const rows = [];
+  const push = (label, val) => {
+    if(val === undefined || val === '' || val === null) return;
+    val = fixDate(val);
+    val = fixEncoding(val);
+    if(label === 'Cédula') val = val.replace(/'/g, '-');
+    rows.push([label, val]);
+  };
+
+  push('Cédula', parts[0]);
+  push('Nombres', parts[1]);
+  push('Apellidos', parts[2]);
+  push('Apellido de casada', parts[3]);
+  push('Sexo', parts[4]);
+
+  let siguienteIndice = 6;
+  const campoLugarFecha = parts[5] || '';
+  if(campoLugarFecha.includes('|')){
+    // Lugar de nacimiento y fecha de nacimiento vienen juntos en este campo
+    const partido = campoLugarFecha.split('|');
+    push('Lugar de nacimiento', partido[0]);
+    push('Fecha de nacimiento', partido[1]);
+    siguienteIndice = 6; // la nacionalidad sigue inmediatamente después
+  }else{
+    push('Lugar de nacimiento', parts[5]);
+    push('Fecha de nacimiento', parts[6]);
+    siguienteIndice = 7;
+  }
+  push('Nacionalidad', parts[siguienteIndice]);
+
+  // Los últimos tres campos, contados desde el final del arreglo
+  const n = parts.length;
+  if(n - 3 > siguienteIndice){
+    push('Fecha de expedición', parts[n - 3]);
+    push('Fecha de vencimiento', parts[n - 2]);
+    push('Código de documento', parts[n - 1]);
+  }
+
+  return rows.length ? rows : null;
+}
+
+// ===== Lectura de pasaporte por MRZ (formato TD3: 2 líneas de 44 caracteres) =====
+const PAISES_MRZ = {
+  PAN:'Panameña', COL:'Colombiana', VEN:'Venezolana', USA:'Estadounidense', CAN:'Canadiense',
+  MEX:'Mexicana', ESP:'Española', CHN:'China', PER:'Peruana', ECU:'Ecuatoriana',
+  BRA:'Brasileña', ARG:'Argentina', CHL:'Chilena', CRI:'Costarricense', HND:'Hondureña',
+  GTM:'Guatemalteca', SLV:'Salvadoreña', NIC:'Nicaragüense', DOM:'Dominicana', CUB:'Cubana',
+  FRA:'Francesa', DEU:'Alemana', ITA:'Italiana', GBR:'Británica', IND:'India',
+  JPN:'Japonesa', KOR:'Surcoreana', RUS:'Rusa', HTI:'Haitiana', JAM:'Jamaiquina'
+};
+
+function mrzYearAAno(yy, modo){
+  const currentYear = new Date().getFullYear();
+  const y1900 = 1900 + yy;
+  const y2000 = 2000 + yy;
+  if(modo === 'nacimiento'){
+    return y2000 <= currentYear ? y2000 : y1900;
+  }
+  return y2000; // vencimiento: siempre se asume 2000+
+}
+
+function mrzFecha(yymmdd, modo){
+  if(!/^\d{6}$/.test(yymmdd)) return '';
+  const yy = parseInt(yymmdd.slice(0,2), 10);
+  const mm = yymmdd.slice(2,4);
+  const dd = yymmdd.slice(4,6);
+  const yyyy = mrzYearAAno(yy, modo);
+  return dd + '/' + mm + '/' + yyyy;
+}
+
+function mrzTitleCase(texto){
+  return texto
+    .toLowerCase()
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function mrzValorCaracter(ch){
+  if(ch === '<') return 0;
+  if(/^\d$/.test(ch)) return Number(ch);
+  return ch.charCodeAt(0) - 55;
+}
+
+function mrzDigitoValido(campo, digito){
+  if(!/^\d$/.test(digito || '')) return false;
+  const pesos = [7, 3, 1];
+  const total = [...campo].reduce((suma, ch, i) => suma + mrzValorCaracter(ch) * pesos[i % 3], 0);
+  return String(total % 10) === digito;
+}
+
+function mrzCorregirDigitos(texto){
+  return texto.replace(/[OQDILSBGZ]/g, ch => ({O:'0',Q:'0',D:'0',I:'1',L:'1',S:'5',B:'8',G:'6',Z:'2'}[ch]));
+}
+
+function normalizarLineasMRZ(text){
+  const candidatas = text.toUpperCase().split(/\r?\n/)
+    .map(l => l.replace(/[^A-Z0-9<]/g, ''))
+    .filter(l => l.length >= 25);
+  if(candidatas.length < 2) return [];
+
+  let idx1 = candidatas.findIndex(l => /^P[A-Z0-9<]/.test(l));
+  if(idx1 < 0) idx1 = Math.max(0, candidatas.length - 2);
+  let line1 = candidatas[idx1] || '';
+  let line2 = candidatas[idx1 + 1] || candidatas[candidatas.length - 1] || '';
+  // En documentos panameños el OCR puede confundir la P inicial por F/R.
+  if(!line1.startsWith('P') && line1.includes('PAN') && line1.includes('<<')) line1 = 'P' + line1.slice(1);
+  line1 = line1.padEnd(44, '<').slice(0, 44);
+  line2 = line2.padEnd(44, '<').slice(0, 44);
+
+  // Corrige confusiones comunes del OCR solamente en posiciones numéricas.
+  const chars = [...line2];
+  [9,13,14,15,16,17,18,19,21,22,23,24,25,26,27,42,43].forEach(i => {
+    chars[i] = mrzCorregirDigitos(chars[i] || '<');
+  });
+  return [line1, chars.join('')];
+}
+
+function parseMRZ(text){
+  const lines = normalizarLineasMRZ(text);
+  if(lines.length < 2) return null;
+
+  const line1 = lines[0];
+  const line2 = lines[1];
+  if(line1.length < 40 || line2.length < 40) return null;
+  if(line1.charAt(0) !== 'P') return null; // documento tipo pasaporte
+
+  const paisEmisor = line1.substring(2, 5).replace(/</g, '');
+  const partesNombre = line1.substring(5).split('<<');
+  const apellidos = mrzTitleCase((partesNombre[0] || '').replace(/</g, ' ').trim());
+  const nombres = mrzTitleCase((partesNombre[1] || '').replace(/</g, ' ').trim());
+
+  const numeroPasaporte = line2.substring(0, 9).replace(/</g, '').trim();
+  const codigoNacionalidad = line2.substring(10, 13).replace(/</g, '');
+  const fechaNacimiento = mrzFecha(line2.substring(13, 19), 'nacimiento');
+  const sexoRaw = line2.charAt(20);
+  const fechaVencimiento = mrzFecha(line2.substring(21, 27), 'vencimiento');
+  const validaciones = [
+    mrzDigitoValido(line2.substring(0, 9), line2.charAt(9)),
+    mrzDigitoValido(line2.substring(13, 19), line2.charAt(19)),
+    mrzDigitoValido(line2.substring(21, 27), line2.charAt(27))
+  ];
+  const totalValidas = validaciones.filter(Boolean).length;
+
+  const rows = [];
+  const push = (label, val) => { if(val) rows.push([label, val]); };
+
+  push('Cédula', numeroPasaporte);
+  push('Nombres', nombres);
+  push('Apellidos', apellidos);
+  push('Sexo', sexoRaw === 'M' || sexoRaw === 'F' ? sexoRaw : '');
+  push('Fecha de nacimiento', fechaNacimiento);
+  push('Nacionalidad', PAISES_MRZ[codigoNacionalidad] || codigoNacionalidad);
+  push('Fecha de vencimiento', fechaVencimiento);
+  push('Tipo de documento', 'Pasaporte');
+  push('Validación MRZ', totalValidas + '/3 dígitos correctos');
+
+  return rows.length >= 3 ? rows : null;
+}
+
+function prepararCapturaMRZ(video, canvas){
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  // Zona punteada inferior del marco de documento del escáner en vivo.
+  const x = Math.floor(vw * 0.16);
+  const y = Math.floor(vh * 0.61);
+  const ancho = Math.floor(vw * 0.68);
+  const alto = Math.floor(vh * 0.20);
+  const escala = Math.min(2.5, 1800 / ancho);
+  canvas.width = Math.round(ancho * escala);
+  canvas.height = Math.round(alto * escala);
+  const ctx = canvas.getContext('2d', {willReadFrequently:true});
+  ctx.drawImage(video, x, y, ancho, alto, 0, 0, canvas.width, canvas.height);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  for(let i=0; i<img.data.length; i+=4){
+    const gris = img.data[i] * .299 + img.data[i+1] * .587 + img.data[i+2] * .114;
+    const contraste = Math.max(0, Math.min(255, (gris - 128) * 1.65 + 128));
+    img.data[i] = img.data[i+1] = img.data[i+2] = contraste;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+async function reconocerCapturaMRZ(video, canvas, textarea, status, textoExito){
+  prepararCapturaMRZ(video, canvas);
+  status.textContent = 'Leyendo MRZ…';
+  status.className = 'status';
+  await cargarTesseract();
+  const {data} = await window.Tesseract.recognize(canvas, 'eng', {
+    tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
+    logger:m => {
+      if(m.status === 'recognizing text') status.textContent = 'Leyendo MRZ… ' + Math.round((m.progress || 0) * 100) + '%';
+    }
+  });
+  const lineas = normalizarLineasMRZ(data.text || '');
+  if(lineas.length < 2) throw new Error('No se detectaron las 2 líneas completas. Acerca más el documento y evita reflejos.');
+  textarea.value = lineas.join('\n');
+  const filas = parseMRZ(textarea.value);
+  const validacion = filas && filas.find(([k]) => k === 'Validación MRZ');
+  status.textContent = textoExito + (validacion ? ' ' + validacion[1] + '.' : '');
+  status.className = validacion && validacion[1] === '3/3 dígitos correctos' ? 'status ok' : 'status warn';
+}
+
+// Formato "real" de la cédula panameña, tal como lo entrega el QR leído por
+// cámara (sin el maltrato de teclado que hace la pistola): campos separados
+// por "|", con guiones normales en fechas/cédula y tildes correctas.
+function convertirFechaGuiones(val){
+  const m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(val || '');
+  if(m) return m[1] + '/' + m[2] + '/' + m[3];
+  return val;
+}
+
+function parseCedulaPipeFormat(text){
+  const parts = text.split('|').map(p => p.trim());
+  if(parts.length < 10) return null;
+
+  const rows = [];
+  const push = (label, val) => {
+    if(val === undefined || val === '' || val === null) return;
+    rows.push([label, val]);
+  };
+
+  push('Cédula', parts[0]);
+  push('Nombres', parts[1]);
+  push('Apellidos', parts[2]);
+  push('Apellido de casada', parts[3]);
+  push('Sexo', parts[4]);
+  push('Lugar de nacimiento', parts[5]);
+  push('Fecha de nacimiento', convertirFechaGuiones(parts[6]));
+  push('Nacionalidad', parts[7]);
+
+  // Los últimos tres campos, contados desde el final del arreglo (igual que
+  // en el formato de corchetes, por si varía la cantidad de campos vacíos)
+  const n = parts.length;
+  if(n - 3 > 7){
+    push('Fecha de expedición', convertirFechaGuiones(parts[n - 3]));
+    push('Fecha de vencimiento', convertirFechaGuiones(parts[n - 2]));
+    push('Código de documento', parts[n - 1]);
+  }
+
+  return rows.length ? rows : null;
+}
+
+function parseQrText(text){
+  const trimmed = text.trim();
+  if(!trimmed) return [];
+
+  // El QR leído por cámara suele traer "|" como separador real
+  if(trimmed.includes('|') && !trimmed.includes(']')){
+    const pipeRows = parseCedulaPipeFormat(trimmed);
+    if(pipeRows) return pipeRows;
+  }
+
+  if(trimmed.includes(']')){
+    const cedulaRows = parseCedulaBracketFormat(trimmed);
+    if(cedulaRows) return cedulaRows;
+  }
+
+  try{
+    const obj = JSON.parse(trimmed);
+    if(obj && typeof obj === 'object'){
+      return Object.entries(obj).map(([k,v]) => [labelize(k), String(v)]);
+    }
+  }catch(e){}
+
+  const lineSep = trimmed.includes('\n') ? '\n' : (trimmed.includes(';') ? ';' : '|');
+  const rawLines = trimmed.split(lineSep).map(l => l.trim()).filter(Boolean);
+
+  const kv = [];
+  let allHaveColon = rawLines.length > 0;
+  for(const line of rawLines){
+    const idx = line.indexOf(':');
+    if(idx > 0){
+      kv.push([labelize(line.slice(0, idx)), line.slice(idx + 1).trim()]);
+    }else{
+      allHaveColon = false;
+    }
+  }
+  if(allHaveColon && kv.length) return kv;
+
+  return [['Contenido del QR', trimmed]];
+}
+
+function rowsToRecord(rows){
+  const record = {};
+  rows.forEach(([label, value]) => { record[label] = value; });
+  return record;
+}
+
+function fullName(record){
+  return [record['Nombres'] || '', record['Apellidos'] || ''].join(' ').trim();
+}
+
+function renderTable(tableEl, rows, extraBadge){
+  const esPasaporte = rows.some(([label, value]) => label === 'Tipo de documento' && value === 'Pasaporte');
+  tableEl.innerHTML = '';
+  rows.forEach(([label, value]) => {
+    const tr = document.createElement('tr');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'col-label';
+    tdLabel.textContent = (esPasaporte && label === 'Cédula') ? 'N° Pasaporte' : label;
+    const tdValue = document.createElement('td');
+    tdValue.className = 'col-value';
+    tdValue.textContent = value;
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdValue);
+    tableEl.appendChild(tr);
+  });
+  if(extraBadge){
+    const tr = document.createElement('tr');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'col-label';
+    tdLabel.textContent = 'Estado';
+    const tdValue = document.createElement('td');
+    tdValue.className = 'col-value';
+    tdValue.innerHTML = extraBadge;
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdValue);
+    tableEl.appendChild(tr);
+  }
+}
+
+/* ---------- TABS ---------- */
+const tabEntrada = document.getElementById('tabEntrada');
+const tabSalida = document.getElementById('tabSalida');
+const tabEntradaVip = document.getElementById('tabEntradaVip');
+const tabSalidaVip = document.getElementById('tabSalidaVip');
+const tabDashboard = document.getElementById('tabDashboard');
+const panelEntrada = document.getElementById('panelEntrada');
+const panelSalida = document.getElementById('panelSalida');
+const panelEntradaVip = document.getElementById('panelEntradaVip');
+const panelSalidaVip = document.getElementById('panelSalidaVip');
+const panelDashboard = document.getElementById('panelDashboard');
+
+function activateTab(tab){
+  tabEntrada.classList.remove('active');
+  tabSalida.classList.remove('active', 'salida');
+  tabEntradaVip.classList.remove('active', 'vip');
+  tabSalidaVip.classList.remove('active', 'vip');
+  tabDashboard.classList.remove('active', 'salida');
+  panelEntrada.classList.add('hidden');
+  panelSalida.classList.add('hidden');
+  panelEntradaVip.classList.add('hidden');
+  panelSalidaVip.classList.add('hidden');
+  panelDashboard.classList.add('hidden');
+
+  if(tab === 'entrada'){
+    tabEntrada.classList.add('active');
+    panelEntrada.classList.remove('hidden');
+    document.getElementById('qrInputIn').focus();
+  }else if(tab === 'salida'){
+    tabSalida.classList.add('active', 'salida');
+    panelSalida.classList.remove('hidden');
+    document.getElementById('qrInputOut').focus();
+  }else if(tab === 'entradaVip'){
+    tabEntradaVip.classList.add('active', 'vip');
+    panelEntradaVip.classList.remove('hidden');
+    document.getElementById('qrInputInVip').focus();
+  }else if(tab === 'salidaVip'){
+    tabSalidaVip.classList.add('active', 'vip');
+    panelSalidaVip.classList.remove('hidden');
+    document.getElementById('qrInputOutVip').focus();
+  }else{
+    tabDashboard.classList.add('active');
+    panelDashboard.classList.remove('hidden');
+    renderDashboard();
+  }
+}
+
+tabEntrada.addEventListener('click', () => activateTab('entrada'));
+tabSalida.addEventListener('click', () => activateTab('salida'));
+tabEntradaVip.addEventListener('click', () => activateTab('entradaVip'));
+tabSalidaVip.addEventListener('click', () => activateTab('salidaVip'));
+tabDashboard.addEventListener('click', () => activateTab('dashboard'));
+
+/* ---------- EXPORTAR REPORTES (CSV) ---------- */
+function csvEscape(val){
+  val = (val === undefined || val === null) ? '' : String(val);
+  if(val.includes(',') || val.includes('"') || val.includes('\n')){
+    val = '"' + val.replace(/"/g, '""') + '"';
+  }
+  return val;
+}
+function toCSV(headers, rows){
+  const lines = [headers.map(csvEscape).join(',')];
+  rows.forEach(r => lines.push(r.map(csvEscape).join(',')));
+  return lines.join('\r\n');
+}
+function downloadCSV(filename, csvString){
+  const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function fechaArchivo(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function eventoARow(e){
+  let tipo, detalle;
+  if(e.tipo === 'entrada'){
+    tipo = 'Entrada';
+    detalle = e.motivo || '';
+  }else{
+    tipo = 'Salida';
+    detalle = '';
+  }
+  return [e.hora || '', e.cedula || '', e.nombre || '', e.tipoVisita || 'NORMAL', tipo, detalle, e.duracionTexto || ''];
+}
+const HEADERS_BITACORA = ['Fecha y hora', 'Cédula', 'Nombre', 'Tipo de visita', 'Tipo de movimiento', 'Detalle', 'Duración'];
+
+function inputDateToRange(inputEl, finDelDia){
+  if(!inputEl.value) return null;
+  const [y, m, d] = inputEl.value.split('-').map(Number);
+  return finDelDia
+    ? new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    : new Date(y, m - 1, d, 0, 0, 0, 0).getTime();
+}
+function obtenerRangoExportacion(){
+  const desde = inputDateToRange(document.getElementById('exportDesde'), false);
+  const hasta = inputDateToRange(document.getElementById('exportHasta'), true);
+  return { desde, hasta };
+}
+function dentroDelRango(ts, rango){
+  if(!ts) return false;
+  if(rango.desde !== null && ts < rango.desde) return false;
+  if(rango.hasta !== null && ts > rango.hasta) return false;
+  return true;
+}
+function inicializarRangoExportacion(){
+  const hoy = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const hoyStr = hoy.getFullYear() + '-' + pad(hoy.getMonth() + 1) + '-' + pad(hoy.getDate());
+  document.getElementById('exportDesde').value = hoyStr;
+  document.getElementById('exportHasta').value = hoyStr;
+}
+
+document.getElementById('btnExportHoy').addEventListener('click', () => {
+  const rango = obtenerRangoExportacion();
+  const eventos = loadEventos().filter(e => dentroDelRango(e.ts, rango));
+  const rows = eventos.map(eventoARow);
+  downloadCSV('actividad_' + fechaArchivo() + '.csv', toCSV(HEADERS_BITACORA, rows));
+});
+
+document.getElementById('btnExportBitacora').addEventListener('click', () => {
+  const eventos = loadEventos();
+  const rows = eventos.map(eventoARow);
+  downloadCSV('bitacora_completa_' + fechaArchivo() + '.csv', toCSV(HEADERS_BITACORA, rows));
+});
+
+document.getElementById('btnExportHistorial').addEventListener('click', () => {
+  const rango = obtenerRangoExportacion();
+  const historial = loadHistorial().filter(h => dentroDelRango(h.salidaTs || h.entradaTs, rango));
+  const headers = ['Cédula', 'Nombre', 'Tipo de visita', 'Hora de entrada', 'Hora de salida', 'Duración'];
+  const rows = historial.map(h => [
+    h.cedula || '', h.nombre || '', h.tipoVisita || 'NORMAL', h.horaEntrada || '', h.horaSalida || '', h.duracionTexto || ''
+  ]);
+  downloadCSV('historial_visitas_' + fechaArchivo() + '.csv', toCSV(headers, rows));
+});
+
+/* ---------- DASHBOARD ---------- */
+function renderDashboard(){
+  const db = loadDb();
+  const eventos = loadEventos();
+
+  const dentro = Object.values(db).filter(r => r.estado === 'dentro');
+  const eventosHoy = eventos.filter(e => isToday(e.ts));
+  const entradasHoy = eventosHoy.filter(e => e.tipo === 'entrada');
+  const entradasHoyNormal = entradasHoy.filter(e => (e.tipoVisita || 'NORMAL') === 'NORMAL');
+  const entradasHoyVip = entradasHoy.filter(e => e.tipoVisita === 'VIP');
+  const salidasHoy = eventosHoy.filter(e => e.tipo === 'salida');
+
+  document.getElementById('mDentro').textContent = dentro.length;
+  document.getElementById('mEntradasHoyNormal').textContent = entradasHoyNormal.length;
+  document.getElementById('mEntradasHoyVip').textContent = entradasHoyVip.length;
+  document.getElementById('mSalidasHoy').textContent = salidasHoy.length;
+
+  if(salidasHoy.length){
+    const totalMin = salidasHoy.reduce((sum, e) => sum + (e.duracionMin || 0), 0);
+    const promedio = Math.round(totalMin / salidasHoy.length);
+    document.getElementById('mPromedioHoy').textContent = formatDuration(promedio * 60000);
+  }else{
+    document.getElementById('mPromedioHoy').textContent = '–';
+  }
+
+  // Actualmente dentro, con cronómetro en vivo
+  const liveList = document.getElementById('liveList');
+  liveList.innerHTML = '';
+  if(!dentro.length){
+    liveList.innerHTML = '<div class="queue-empty">Nadie está dentro en este momento.</div>';
+  }else{
+    dentro
+      .sort((a, b) => (a.entradaTs || 0) - (b.entradaTs || 0))
+      .forEach(r => {
+        const row = document.createElement('div');
+        row.className = 'live-row';
+        const name = document.createElement('span');
+        name.className = 'live-name';
+        const vipTag = r.tipoVisita === 'VIP' ? ' ⭐VIP' : '';
+        name.textContent = ([r['Nombres'] || '', r['Apellidos'] || ''].join(' ').trim() || r['Cédula']) + vipTag;
+        const timer = document.createElement('span');
+        timer.className = 'live-timer';
+        timer.textContent = formatDuration(Date.now() - (r.entradaTs || Date.now()));
+        row.appendChild(name);
+        row.appendChild(timer);
+        liveList.appendChild(row);
+      });
+  }
+
+  // Actividad reciente / bitácora (últimos 8 eventos, más nuevo primero)
+  const activityList = document.getElementById('activityList');
+  activityList.innerHTML = '';
+  const recientes = eventos.slice(-8).reverse();
+  if(!recientes.length){
+    activityList.innerHTML = '<div class="queue-empty">Todavía no hay actividad registrada.</div>';
+  }else{
+    recientes.forEach(e => {
+      const row = document.createElement('div');
+      row.className = 'activity-row';
+      const dot = document.createElement('span');
+      dot.className = 'dot ' + (e.tipo === 'salida' ? 'out' : 'in');
+      const text = document.createElement('span');
+      text.className = 'activity-text';
+
+      let accion, puntoTxt = '';
+      if(e.tipo === 'entrada'){
+        accion = 'entró';
+        puntoTxt = e.motivo ? ' · ' + e.motivo : '';
+      }else{
+        accion = 'salió';
+        puntoTxt = e.duracionTexto ? ' (' + e.duracionTexto + ' dentro)' : '';
+      }
+      text.innerHTML = '<b>' + (e.nombre || e.cedula || 'Alguien') + '</b>' + (e.tipoVisita === 'VIP' ? ' ⭐VIP' : '') + ' ' + accion + puntoTxt;
+      const time = document.createElement('span');
+      time.className = 'activity-time';
+      time.textContent = e.hora || '';
+      row.appendChild(dot);
+      row.appendChild(text);
+      row.appendChild(time);
+      activityList.appendChild(row);
+    });
+  }
+
+  renderStats(db, eventos);
+}
+
+/* ---------- ESTADÍSTICAS ---------- */
+function calcularEdad(fechaStr){
+  // Espera formato DD/MM/AAAA
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(fechaStr || '');
+  if(!m) return null;
+  const nacimiento = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  if(isNaN(nacimiento.getTime())) return null;
+  const hoy = new Date();
+  let edad = hoy.getFullYear() - nacimiento.getFullYear();
+  const noHaCumplido = (hoy.getMonth() < nacimiento.getMonth()) ||
+    (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() < nacimiento.getDate());
+  if(noHaCumplido) edad--;
+  return (edad >= 0 && edad < 120) ? edad : null;
+}
+
+function renderBarras(contenedorId, entradas, colorClass){
+  const el = document.getElementById(contenedorId);
+  el.innerHTML = '';
+  const total = entradas.reduce((sum, [, count]) => sum + count, 0);
+  if(!total){
+    el.innerHTML = '<div class="queue-empty">Todavía no hay datos suficientes.</div>';
+    return;
+  }
+  const max = Math.max(...entradas.map(([, count]) => count));
+  entradas.forEach(([label, count]) => {
+    const row = document.createElement('div');
+    row.className = 'stat-bar-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'stat-bar-label';
+    lbl.textContent = label;
+    const track = document.createElement('span');
+    track.className = 'stat-bar-track';
+    const fill = document.createElement('span');
+    fill.className = 'stat-bar-fill';
+    fill.style.width = (max ? Math.round((count / max) * 100) : 0) + '%';
+    track.appendChild(fill);
+    const cnt = document.createElement('span');
+    cnt.className = 'stat-bar-count';
+    cnt.textContent = count;
+    row.appendChild(lbl);
+    row.appendChild(track);
+    row.appendChild(cnt);
+    el.appendChild(row);
+  });
+}
+
+function renderStats(db, eventos){
+  // Promedio de entradas por día: sobre los días en que sí hubo al menos una entrada
+  const entradas = eventos.filter(e => e.tipo === 'entrada');
+  const diasConEntradas = new Set(entradas.map(e => new Date(e.ts).toDateString()));
+  const promedioDiario = diasConEntradas.size
+    ? (entradas.length / diasConEntradas.size)
+    : 0;
+  document.getElementById('statPromedioDiario').textContent = diasConEntradas.size
+    ? promedioDiario.toFixed(1) + ' / día'
+    : '–';
+
+  // Por edad y por tipo de documento: sobre personas únicas (una fila por cédula/pasaporte)
+  const personas = Object.values(db);
+  const rangosEdad = [
+    { label: '0-17', min: 0, max: 17 },
+    { label: '18-30', min: 18, max: 30 },
+    { label: '31-45', min: 31, max: 45 },
+    { label: '46-60', min: 46, max: 60 },
+    { label: '61+', min: 61, max: 999 }
+  ];
+  const conteoEdades = rangosEdad.map(r => [r.label, 0]);
+  personas.forEach(p => {
+    const edad = calcularEdad(p['Fecha de nacimiento']);
+    if(edad === null) return;
+    const idx = rangosEdad.findIndex(r => edad >= r.min && edad <= r.max);
+    if(idx >= 0) conteoEdades[idx][1]++;
+  });
+  renderBarras('statEdades', conteoEdades);
+
+  let cedulas = 0, pasaportes = 0;
+  personas.forEach(p => {
+    if(p['Tipo de documento'] === 'Pasaporte') pasaportes++;
+    else cedulas++;
+  });
+  renderBarras('statDocumentos', [['Cédula', cedulas], ['Pasaporte', pasaportes]]);
+}
+
+// Refresco en tiempo real: recalcula cada segundo (para los cronómetros en vivo)
+// y también al detectar cambios guardados desde otra pestaña/ventana del navegador.
+setInterval(() => {
+  if(!panelDashboard.classList.contains('hidden')) renderDashboard();
+}, 1000);
+
+window.addEventListener('storage', e => {
+  if([STORAGE_KEY, HISTORIAL_KEY, EVENTOS_KEY].includes(e.key)){
+    updateInsideCount();
+    renderQueue();
+    renderDashboard();
+  }
+});
+
+/* ---------- PANEL ENTRADA (normal y VIP) ---------- */
+const entradaModules = {};
+
+function initEntradaModule(suffix, tipoVisita){
+  const id = base => document.getElementById(base + suffix);
+
+  const qrInput = id('qrInputIn');
+  const statusEl = id('statusIn');
+  const resultBlock = id('resultBlockIn');
+  const dataTable = id('dataTableIn');
+  const scanCard = id('scanCardIn');
+  const thanksCard = id('thanksCardIn');
+  const manualToggle = id('manualToggleIn');
+  const manualForm = id('manualFormIn');
+  const motivoSelect = id('motivoVisitaIn');
+  const statusMotivo = id('statusMotivoIn');
+  let lastRecord = null;
+
+  function setStatus(msg, type){
+    statusEl.textContent = msg || '';
+    statusEl.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  function processRows(rows){
+    lastRecord = rowsToRecord(rows);
+    const cedula = lastRecord['Cédula'];
+    const db = loadDb();
+    const existing = cedula ? db[cedula] : null;
+
+    if(existing && existing.estado === 'dentro'){
+      const name = fullName(existing);
+      id('thanksNameIn').textContent = name
+        ? 'Ya te encontrabas registrado, ' + name
+        : 'Ya te encontrabas registrado';
+      id('thanksSubIn').textContent =
+        'Gracias, tu ingreso ya estaba marcado desde ' + (existing.horaEntrada || '') + '.';
+      mostrarConfirmacionEntrada();
+      qrInput.value = '';
+      return;
+    }
+
+    renderTable(dataTable, rows);
+    resultBlock.classList.remove('hidden');
+    setStatus('Datos listos para confirmar.', 'ok');
+  }
+
+  qrInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const text = qrInput.value;
+      if(!text.trim()){
+        setStatus('No se leyó ningún dato. Intenta de nuevo.', 'err');
+        resultBlock.classList.add('hidden');
+        return;
+      }
+      processRows(parseQrText(text));
+    }
+  });
+
+  id('btnClearIn').addEventListener('click', () => {
+    qrInput.value = '';
+    qrInput.focus();
+    resultBlock.classList.add('hidden');
+    motivoSelect.value = '';
+    statusMotivo.textContent = '';
+    setStatus('Coloca el cursor en el campo y escanea.');
+  });
+
+  /* --- Registro manual (sin QR) --- */
+  const manualFieldIds = ['mCedula','mNombres','mApellidos','mSexo','mLugar','mFechaNac','mNacionalidad','mMotivo'];
+  const mrzToggle = id('mrzToggleIn');
+  const mrzForm = id('mrzFormIn');
+  const mrzText = id('mrzTextIn');
+  const statusMrz = id('statusMrzIn');
+  const camToggle = id('camToggleIn');
+  const camForm = id('camFormIn');
+  const camVideo = id('camVideoIn');
+  const camCanvas = id('camCanvasIn');
+  const statusCam = id('statusCamIn');
+  const camDeviceSelect = id('camDeviceSelectIn');
+  const zoomLevelEl = id('zoomLevelIn');
+  let camStream = null, camScanning = false, camRaf = null;
+  let camZoom = 1;
+  const CAM_ZOOM_MIN = 1, CAM_ZOOM_MAX = 4, CAM_ZOOM_PASO = 0.5;
+
+  function aplicarZoomVisual(){
+    zoomLevelEl.textContent = camZoom.toFixed(1) + 'x';
+    camVideo.style.transform = 'scale(' + camZoom + ')';
+  }
+  id('btnZoomOutIn').addEventListener('click', () => {
+    camZoom = Math.max(CAM_ZOOM_MIN, camZoom - CAM_ZOOM_PASO);
+    aplicarZoomVisual();
+  });
+  id('btnZoomInIn').addEventListener('click', () => {
+    camZoom = Math.min(CAM_ZOOM_MAX, camZoom + CAM_ZOOM_PASO);
+    aplicarZoomVisual();
+  });
+
+  camDeviceSelect.addEventListener('change', () => {
+    detenerCamaraQR();
+    iniciarCamaraQR(camDeviceSelect.value);
+  });
+
+  async function listarCamaras(){
+    try{
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter(d => d.kind === 'videoinput');
+      if(cams.length > 1){
+        const seleccionActual = camDeviceSelect.value;
+        camDeviceSelect.innerHTML = '';
+        cams.forEach((cam, i) => {
+          const opt = document.createElement('option');
+          opt.value = cam.deviceId;
+          opt.textContent = cam.label || ('Cámara ' + (i + 1));
+          camDeviceSelect.appendChild(opt);
+        });
+        camDeviceSelect.classList.remove('hidden');
+        if(camStream){
+          const activa = camStream.getVideoTracks()[0].getSettings().deviceId;
+          if(activa) camDeviceSelect.value = activa;
+          else if(seleccionActual) camDeviceSelect.value = seleccionActual;
+        }
+      }else{
+        camDeviceSelect.classList.add('hidden');
+      }
+    }catch(e){ /* algunos navegadores no permiten enumerar sin permiso previo */ }
+  }
+
+  async function iniciarCamaraQR(deviceId){
+    try{
+      statusCam.textContent = 'Solicitando acceso a la cámara…';
+      statusCam.className = 'status';
+      const restricciones = deviceId
+        ? { video: { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } } }
+        : { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } };
+      camStream = await navigator.mediaDevices.getUserMedia(restricciones);
+      camVideo.srcObject = camStream;
+      await camVideo.play();
+      // Intenta forzar enfoque automático continuo (funciona en Chrome/Android;
+      // Safari/iOS no expone este control, ahí ayuda más el botón "Reenfocar").
+      const camTrack = camStream.getVideoTracks()[0];
+      if(camTrack && typeof camTrack.getCapabilities === 'function'){
+        try{
+          const caps = camTrack.getCapabilities();
+          if(caps.focusMode && caps.focusMode.includes('continuous')){
+            await camTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+          }
+        }catch(e){ /* no soportado en este dispositivo, se ignora */ }
+      }
+      await listarCamaras();
+      camScanning = true;
+      statusCam.textContent = 'Sostén el celular firme, a unos 15-20 cm, con buena luz.';
+      camRaf = requestAnimationFrame(tickCamQR);
+    }catch(err){
+      statusCam.textContent = 'No se pudo acceder a la cámara (revisa permisos o que la página esté en HTTPS).';
+      statusCam.className = 'status err';
+    }
+  }
+  function detenerCamaraQR(){
+    camScanning = false;
+    if(camRaf) cancelAnimationFrame(camRaf);
+    if(camStream){
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+  }
+  id('btnCamRefocusIn').addEventListener('click', () => {
+    const seleccionada = camDeviceSelect.classList.contains('hidden') ? undefined : camDeviceSelect.value;
+    detenerCamaraQR();
+    iniciarCamaraQR(seleccionada);
+  });
+  let camIntentos = 0;
+  let camOcupado = false;
+  async function tickCamQR(){
+    if(!camScanning) return;
+    if(camOcupado){ camRaf = requestAnimationFrame(tickCamQR); return; }
+    camOcupado = true;
+    try{
+    if(camVideo.readyState === camVideo.HAVE_ENOUGH_DATA){
+      camCanvas.width = camVideo.videoWidth;
+      camCanvas.height = camVideo.videoHeight;
+      const ctx = camCanvas.getContext('2d', { willReadFrequently: true });
+      // Recorta el centro del cuadro según el zoom elegido y lo estira a
+      // toda la resolución del canvas: así se analiza la misma zona ampliada
+      // que ve la persona en pantalla, no el cuadro completo sin acercar.
+      const anchoOrigen = camVideo.videoWidth / camZoom;
+      const altoOrigen = camVideo.videoHeight / camZoom;
+      const xOrigen = (camVideo.videoWidth - anchoOrigen) / 2;
+      const yOrigen = (camVideo.videoHeight - altoOrigen) / 2;
+      ctx.drawImage(camVideo, xOrigen, yOrigen, anchoOrigen, altoOrigen, 0, 0, camCanvas.width, camCanvas.height);
+
+      let textoDecodificado = null;
+
+      // 1. Detector nativo del navegador (si está disponible): usa el motor
+      //    del sistema operativo, normalmente mucho más robusto con QR
+      //    densos, inclinados o algo borrosos.
+      if(window.__nativeBarcodeDetector){
+        try{
+          const resultados = await window.__nativeBarcodeDetector.detect(camCanvas);
+          if(resultados && resultados.length) textoDecodificado = resultados[0].rawValue;
+        }catch(e){ /* si falla, sigue con jsQR abajo */ }
+      }
+
+      // 2. ZBar-wasm (WebAssembly): motor distinto y muy robusto con QR
+      //    densos, inclinados o algo borrosos, cuando el nativo no está o falla.
+      if(!textoDecodificado && window.zbarWasm){
+        try{
+          const imageData = ctx.getImageData(0, 0, camCanvas.width, camCanvas.height);
+          const simbolos = await window.zbarWasm.scanImageData(imageData);
+          if(simbolos && simbolos.length){
+            // No usamos symbol.decode(): ZBar adivina mal la codificación (asume
+            // UTF-8/SJIS) y rompe tildes como Í/Ñ. Las cédulas panameñas vienen en
+            // Latin-1 (ISO-8859-1), así que decodificamos los bytes crudos nosotros.
+            const bytesQR = simbolos[0].data;
+            textoDecodificado = bytesQR
+              ? new TextDecoder('iso-8859-1').decode(bytesQR)
+              : simbolos[0].decode();
+          }
+        }catch(e){ /* si falla, sigue con jsQR abajo */ }
+      }
+
+      // 3. jsQR como último respaldo (siempre disponible, funciona en cualquier navegador)
+      if(!textoDecodificado && window.jsQR){
+        const imageData = ctx.getImageData(0, 0, camCanvas.width, camCanvas.height);
+        const code = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if(code && code.data) textoDecodificado = code.data;
+      }
+
+      camIntentos++;
+      const motores = [];
+      if(window.__nativeBarcodeDetector) motores.push('nativo');
+      if(window.zbarWasm) motores.push('zbar');
+      motores.push('jsQR');
+      const motor = motores.join('+');
+      statusCam.textContent = 'Escaneando (' + motor + ')… ' + camCanvas.width + 'x' + camCanvas.height + ' · intento #' + camIntentos;
+      statusCam.className = 'status';
+
+      if(textoDecodificado){
+        detenerCamaraQR();
+        grupoIngreso.cerrar(2);
+        processRows(parseQrText(textoDecodificado));
+        camOcupado = false;
+        return;
+      }
+    }
+    }catch(err){
+      statusCam.textContent = 'Error al leer la cámara: ' + (err && err.message ? err.message : err);
+      statusCam.className = 'status err';
+    }
+    camOcupado = false;
+    camRaf = requestAnimationFrame(tickCamQR);
+  }
+
+  const grupoIngreso = crearGrupoExclusivo([
+    {
+      toggle: manualToggle, form: manualForm,
+      textoAbierto: 'Ocultar formulario manual',
+      textoCerrado: '¿No tiene código QR? Ingresar datos manualmente',
+      alAbrir: () => id('mCedula').focus()
+    },
+    {
+      toggle: mrzToggle, form: mrzForm,
+      textoAbierto: 'Ocultar lectura de pasaporte',
+      textoCerrado: '¿Es extranjero? Leer pasaporte (MRZ)',
+      alAbrir: () => mrzText.focus()
+    },
+    {
+      toggle: camToggle, form: camForm,
+      textoAbierto: 'Ocultar cámara',
+      textoCerrado: '📷 Usar cámara para leer QR',
+      alAbrir: () => {
+        cargarJsQR().catch(() => {});
+        cargarZbarWasm().catch(() => {});
+        iniciarCamaraQR();
+      },
+      alCerrar: () => {
+        detenerCamaraQR();
+        camZoom = 1;
+        aplicarZoomVisual();
+      }
+    }
+  ]);
+
+  id('btnManualCancelIn').addEventListener('click', () => {
+    manualFieldIds.forEach(fid => id(fid).value = '');
+    grupoIngreso.cerrar(0);
+    id('statusManualIn').textContent = '';
+  });
+
+  id('btnManualSubmitIn').addEventListener('click', () => {
+    const statusManual = id('statusManualIn');
+    const cedula = id('mCedula').value.trim();
+    const nombres = id('mNombres').value.trim();
+    const apellidos = id('mApellidos').value.trim();
+    const motivo = id('mMotivo').value;
+
+    if(!cedula || !nombres || !apellidos){
+      statusManual.textContent = 'Completa al menos cédula, nombres y apellidos.';
+      statusManual.className = 'status err';
+      return;
+    }
+    if(!motivo){
+      statusManual.textContent = 'Selecciona el motivo de la visita.';
+      statusManual.className = 'status err';
+      return;
+    }
+
+    const rows = [
+      ['Cédula', cedula],
+      ['Nombres', nombres],
+      ['Apellidos', apellidos],
+      ['Sexo', id('mSexo').value.trim()],
+      ['Lugar de nacimiento', id('mLugar').value.trim()],
+      ['Fecha de nacimiento', formatDateInput(id('mFechaNac').value)],
+      ['Nacionalidad', id('mNacionalidad').value.trim()]
+    ].filter(([, value]) => value);
+
+    statusManual.textContent = '';
+    grupoIngreso.cerrar(0);
+    processRows(rows);
+    // pasa el motivo ya elegido a la pantalla de confirmación para no pedirlo dos veces
+    motivoSelect.value = motivo;
+  });
+
+  /* --- Lectura de pasaporte por MRZ (extranjeros) --- */
+  id('btnMrzCancelIn').addEventListener('click', () => {
+    mrzText.value = '';
+    statusMrz.textContent = '';
+    grupoIngreso.cerrar(1);
+  });
+
+  id('btnMrzSubmitIn').addEventListener('click', () => {
+    const rows = parseMRZ(mrzText.value);
+    if(!rows){
+      statusMrz.textContent = 'No se pudo leer el MRZ. Verifica que sean las 2 líneas completas del pasaporte.';
+      statusMrz.className = 'status err';
+      return;
+    }
+    statusMrz.textContent = '';
+    mrzText.value = '';
+    grupoIngreso.cerrar(1);
+    processRows(rows);
+  });
+
+  /* --- OCR por cámara para el MRZ (mejor esfuerzo: rellena el texto para revisar) --- */
+  const mrzCamToggle = id('mrzCamToggleIn');
+  const mrzCamBlock = id('mrzCamBlockIn');
+  const mrzCamVideo = id('mrzCamVideoIn');
+  const mrzCamCanvas = id('mrzCamCanvasIn');
+  const statusMrzCam = id('statusMrzCamIn');
+  let mrzCamStream = null;
+  let mrzAutoSeq = 0;
+
+  async function escanearMrzEnVivo(seq){
+    while(mrzCamStream && seq === mrzAutoSeq){
+      try{
+        await reconocerCapturaMRZ(mrzCamVideo, mrzCamCanvas, mrzText, statusMrzCam, 'MRZ detectado.');
+        const rows = parseMRZ(mrzText.value);
+        const validacion = rows && rows.find(([k,v]) => k === 'Validación MRZ' && v === '3/3 dígitos correctos');
+        if(validacion){
+          const marco = mrzCamBlock.querySelector('.cam-frame.mrz');
+          if(marco) marco.classList.add('valid');
+          statusMrzCam.textContent = 'Documento leído correctamente ✓';
+          await new Promise(r => setTimeout(r, 450));
+          if(mrzCamStream) mrzCamStream.getTracks().forEach(t => t.stop());
+          mrzCamStream = null; mrzAutoSeq++;
+          document.body.classList.remove('mrz-live');
+          mrzCamBlock.classList.remove('mrz-live-panel');
+          mrzCamBlock.classList.add('hidden');
+          id('btnMrzSubmitIn').click();
+          return;
+        }
+      }catch(err){
+        statusMrzCam.textContent = 'Buscando las líneas MRZ… Mantén el documento dentro del marco.';
+        statusMrzCam.className = 'status';
+      }
+      await new Promise(r => setTimeout(r, 350));
+    }
+  }
+
+  mrzCamToggle.addEventListener('click', async () => {
+    const abriendo = mrzCamBlock.classList.contains('hidden');
+    if(abriendo){
+      mrzCamBlock.classList.remove('hidden');
+      mrzCamToggle.textContent = 'Ocultar cámara';
+      try{
+        statusMrzCam.textContent = 'Solicitando acceso a la cámara…';
+        mrzCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+        mrzCamVideo.srcObject = mrzCamStream;
+        await mrzCamVideo.play();
+        document.body.classList.add('mrz-live');
+        mrzCamBlock.classList.add('mrz-live-panel');
+        statusMrzCam.textContent = 'Buscando las líneas MRZ…';
+        statusMrzCam.className = 'status';
+        mrzAutoSeq++;
+        escanearMrzEnVivo(mrzAutoSeq);
+      }catch(err){
+        statusMrzCam.textContent = 'No se pudo acceder a la cámara (revisa permisos o que la página esté en HTTPS).';
+        statusMrzCam.className = 'status err';
+      }
+    }else{
+      mrzAutoSeq++;
+      if(mrzCamStream){ mrzCamStream.getTracks().forEach(t => t.stop()); mrzCamStream = null; }
+      document.body.classList.remove('mrz-live');
+      mrzCamBlock.classList.remove('mrz-live-panel');
+      mrzCamBlock.classList.add('hidden');
+      mrzCamToggle.textContent = '📷 Usar cámara (OCR)';
+    }
+  });
+
+  id('btnMrzCamCaptureIn').addEventListener('click', () => {
+    if(!mrzCamBlock.classList.contains('hidden')) mrzCamToggle.click();
+  });
+
+  id('btnConfirmIn').addEventListener('click', () => {
+    if(!lastRecord || !lastRecord['Cédula']) return;
+
+    const motivo = motivoSelect.value;
+    if(!motivo){
+      statusMotivo.textContent = 'Selecciona el motivo de la visita.';
+      statusMotivo.className = 'status err';
+      return;
+    }
+    statusMotivo.textContent = '';
+
+    const db = loadDb();
+    const cedula = lastRecord['Cédula'];
+    const entradaTs = Date.now();
+    const horaEntrada = new Date(entradaTs).toLocaleString('es-PA');
+    db[cedula] = Object.assign({}, lastRecord, {
+      estado: 'dentro',
+      horaEntrada: horaEntrada,
+      entradaTs: entradaTs,
+      motivoVisita: motivo,
+      tipoVisita: tipoVisita
+    });
+    saveDb(db);
+    updateInsideCount();
+    renderQueue();
+
+    addEvento({
+      tipo: 'entrada',
+      cedula: cedula,
+      nombre: fullName(lastRecord),
+      hora: horaEntrada,
+      ts: entradaTs,
+      motivo: motivo,
+      tipoVisita: tipoVisita
+    });
+    renderDashboard();
+
+    const name = fullName(lastRecord);
+    id('thanksNameIn').textContent = name
+      ? 'Gracias por registrarte, ' + name
+      : 'Gracias por registrarte';
+    id('thanksSubIn').textContent = 'Quedaste registrado como presente.';
+    motivoSelect.value = '';
+    mostrarConfirmacionEntrada();
+  });
+
+  let thanksTimeoutIn = null;
+  function reiniciarEntrada(){
+    if(thanksTimeoutIn){ clearTimeout(thanksTimeoutIn); thanksTimeoutIn = null; }
+    qrInput.value = '';
+    resultBlock.classList.add('hidden');
+    motivoSelect.value = '';
+    statusMotivo.textContent = '';
+    setStatus('Coloca el cursor en el campo y escanea.');
+    thanksCard.classList.add('hidden');
+    scanCard.classList.remove('hidden');
+    manualFieldIds.forEach(fid => id(fid).value = '');
+    grupoIngreso.cerrar(0);
+    mrzText.value = '';
+    statusMrz.textContent = '';
+    grupoIngreso.cerrar(1);
+    grupoIngreso.cerrar(2);
+    if(mrzCamStream){ mrzCamStream.getTracks().forEach(t => t.stop()); mrzCamStream = null; }
+    mrzCamBlock.classList.add('hidden');
+    mrzCamToggle.textContent = '📷 Usar cámara (OCR)';
+    qrInput.focus();
+  }
+  function mostrarConfirmacionEntrada(){
+    scanCard.classList.add('hidden');
+    thanksCard.classList.remove('hidden');
+    if(thanksTimeoutIn) clearTimeout(thanksTimeoutIn);
+    thanksTimeoutIn = setTimeout(reiniciarEntrada, 4000);
+  }
+
+  id('btnAgainIn').addEventListener('click', reiniciarEntrada);
+
+  entradaModules[suffix || 'normal'] = { qrInput, resultBlock, thanksCard, manualForm, mrzForm, camForm };
+}
+
+initEntradaModule('', 'NORMAL');
+initEntradaModule('Vip', 'VIP');
+
+const qrInputIn = entradaModules.normal.qrInput;
+const resultBlockIn = entradaModules.normal.resultBlock;
+const thanksCardIn = entradaModules.normal.thanksCard;
+const manualFormIn = entradaModules.normal.manualForm;
+const mrzFormIn = entradaModules.normal.mrzForm;
+
+/* ---------- PANEL SALIDA (normal y VIP) ---------- */
+const salidaModules = {};
+
+function recordToRows(record){
+  const labels = ['Cédula','Nombres','Apellidos','Sexo','Lugar de nacimiento','Fecha de nacimiento','Nacionalidad','Fecha de expedición','Fecha de vencimiento','Código de documento','Tipo de documento'];
+  return labels.filter(l => record[l]).map(l => [l, record[l]]);
+}
+
+function initSalidaModule(suffix, tipoRequerido, nombrePestañaPropia, nombrePestañaOtra){
+  const id = base => document.getElementById(base + suffix);
+
+  const qrInput = id('qrInputOut');
+  const statusEl = id('statusOut');
+  const resultBlock = id('resultBlockOut');
+  const dataTable = id('dataTableOut');
+  const scanCard = id('scanCardOut');
+  const thanksCard = id('thanksCardOut');
+  const btnConfirm = id('btnConfirmOut');
+  const manualToggle = id('manualToggleOut');
+  const manualForm = id('manualFormOut');
+  let lastCedula = null;
+
+  function setStatus(msg, type){
+    statusEl.textContent = msg || '';
+    statusEl.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  function esDelTipoCorrecto(record){
+    const tipo = record.tipoVisita || 'NORMAL';
+    return tipo === tipoRequerido;
+  }
+
+  function lookup(cedula, rowsForDisplay){
+    lastCedula = cedula;
+    const db = loadDb();
+    const existing = cedula ? db[cedula] : null;
+    const rows = rowsForDisplay || (existing ? recordToRows(existing) : [['Cédula', cedula]]);
+
+    if(!existing){
+      renderTable(dataTable, rows, '<span class="badge out">No registrada</span>');
+      resultBlock.classList.remove('hidden');
+      btnConfirm.classList.add('hidden');
+      setStatus('Esta cédula no tiene una entrada registrada.', 'err');
+      return;
+    }
+
+    if(existing.estado === 'retirado'){
+      renderTable(dataTable, rows, '<span class="badge out">Ya se había retirado (' + (existing.horaSalida || '') + ')</span>');
+      resultBlock.classList.remove('hidden');
+      btnConfirm.classList.add('hidden');
+      setStatus('Esta persona ya había registrado su salida.', 'warn');
+      return;
+    }
+
+    if(!esDelTipoCorrecto(existing)){
+      renderTable(dataTable, rows, '<span class="badge out">Visita ' + (existing.tipoVisita || 'NORMAL') + '</span>');
+      resultBlock.classList.remove('hidden');
+      btnConfirm.classList.add('hidden');
+      setStatus('Esta es una visita ' + (existing.tipoVisita || 'NORMAL') + '. Regístrela desde "' + nombrePestañaOtra + '".', 'warn');
+      return;
+    }
+
+    renderTable(dataTable, rows, '<span class="badge in">Dentro desde ' + (existing.horaEntrada || '') + '</span>');
+    resultBlock.classList.remove('hidden');
+    btnConfirm.classList.remove('hidden');
+    setStatus('Registro encontrado. Confirma la salida.', 'ok');
+  }
+
+  qrInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const text = qrInput.value;
+      if(!text.trim()){
+        setStatus('No se leyó ningún dato. Intenta de nuevo.', 'err');
+        resultBlock.classList.add('hidden');
+        return;
+      }
+      const rows = parseQrText(text);
+      const record = rowsToRecord(rows);
+      lookup(record['Cédula'], rows);
+    }
+  });
+
+  id('btnClearOut').addEventListener('click', () => {
+    qrInput.value = '';
+    qrInput.focus();
+    resultBlock.classList.add('hidden');
+    btnConfirm.classList.add('hidden');
+    setStatus('Coloca el cursor en el campo y escanea.');
+  });
+
+  const mrzToggle = id('mrzToggleOut');
+  const mrzForm = id('mrzFormOut');
+  const mrzText = id('mrzTextOut');
+  const statusMrz = id('statusMrzOut');
+  const camToggle = id('camToggleOut');
+  const camForm = id('camFormOut');
+  const camVideo = id('camVideoOut');
+  const camCanvas = id('camCanvasOut');
+  const statusCam = id('statusCamOut');
+  const camDeviceSelect = id('camDeviceSelectOut');
+  const zoomLevelEl = id('zoomLevelOut');
+  let camStream = null, camScanning = false, camRaf = null;
+  let camZoom = 1;
+  const CAM_ZOOM_MIN = 1, CAM_ZOOM_MAX = 4, CAM_ZOOM_PASO = 0.5;
+
+  function aplicarZoomVisual(){
+    zoomLevelEl.textContent = camZoom.toFixed(1) + 'x';
+    camVideo.style.transform = 'scale(' + camZoom + ')';
+  }
+  id('btnZoomOutOut').addEventListener('click', () => {
+    camZoom = Math.max(CAM_ZOOM_MIN, camZoom - CAM_ZOOM_PASO);
+    aplicarZoomVisual();
+  });
+  id('btnZoomInOut').addEventListener('click', () => {
+    camZoom = Math.min(CAM_ZOOM_MAX, camZoom + CAM_ZOOM_PASO);
+    aplicarZoomVisual();
+  });
+
+  camDeviceSelect.addEventListener('change', () => {
+    detenerCamaraQR();
+    iniciarCamaraQR(camDeviceSelect.value);
+  });
+
+  async function listarCamaras(){
+    try{
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter(d => d.kind === 'videoinput');
+      if(cams.length > 1){
+        const seleccionActual = camDeviceSelect.value;
+        camDeviceSelect.innerHTML = '';
+        cams.forEach((cam, i) => {
+          const opt = document.createElement('option');
+          opt.value = cam.deviceId;
+          opt.textContent = cam.label || ('Cámara ' + (i + 1));
+          camDeviceSelect.appendChild(opt);
+        });
+        camDeviceSelect.classList.remove('hidden');
+        if(camStream){
+          const activa = camStream.getVideoTracks()[0].getSettings().deviceId;
+          if(activa) camDeviceSelect.value = activa;
+          else if(seleccionActual) camDeviceSelect.value = seleccionActual;
+        }
+      }else{
+        camDeviceSelect.classList.add('hidden');
+      }
+    }catch(e){ /* algunos navegadores no permiten enumerar sin permiso previo */ }
+  }
+
+  async function iniciarCamaraQR(deviceId){
+    try{
+      statusCam.textContent = 'Solicitando acceso a la cámara…';
+      statusCam.className = 'status';
+      const restricciones = deviceId
+        ? { video: { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } } }
+        : { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } };
+      camStream = await navigator.mediaDevices.getUserMedia(restricciones);
+      camVideo.srcObject = camStream;
+      await camVideo.play();
+      // Intenta forzar enfoque automático continuo (funciona en Chrome/Android;
+      // Safari/iOS no expone este control, ahí ayuda más el botón "Reenfocar").
+      const camTrack = camStream.getVideoTracks()[0];
+      if(camTrack && typeof camTrack.getCapabilities === 'function'){
+        try{
+          const caps = camTrack.getCapabilities();
+          if(caps.focusMode && caps.focusMode.includes('continuous')){
+            await camTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+          }
+        }catch(e){ /* no soportado en este dispositivo, se ignora */ }
+      }
+      await listarCamaras();
+      camScanning = true;
+      statusCam.textContent = 'Sostén el celular firme, a unos 15-20 cm, con buena luz.';
+      camRaf = requestAnimationFrame(tickCamQR);
+    }catch(err){
+      statusCam.textContent = 'No se pudo acceder a la cámara (revisa permisos o que la página esté en HTTPS).';
+      statusCam.className = 'status err';
+    }
+  }
+  function detenerCamaraQR(){
+    camScanning = false;
+    if(camRaf) cancelAnimationFrame(camRaf);
+    if(camStream){
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+  }
+  id('btnCamRefocusOut').addEventListener('click', () => {
+    const seleccionada = camDeviceSelect.classList.contains('hidden') ? undefined : camDeviceSelect.value;
+    detenerCamaraQR();
+    iniciarCamaraQR(seleccionada);
+  });
+  let camIntentos = 0;
+  let camOcupado = false;
+  async function tickCamQR(){
+    if(!camScanning) return;
+    if(camOcupado){ camRaf = requestAnimationFrame(tickCamQR); return; }
+    camOcupado = true;
+    try{
+    if(camVideo.readyState === camVideo.HAVE_ENOUGH_DATA){
+      camCanvas.width = camVideo.videoWidth;
+      camCanvas.height = camVideo.videoHeight;
+      const ctx = camCanvas.getContext('2d', { willReadFrequently: true });
+      // Recorta el centro del cuadro según el zoom elegido y lo estira a
+      // toda la resolución del canvas: así se analiza la misma zona ampliada
+      // que ve la persona en pantalla, no el cuadro completo sin acercar.
+      const anchoOrigen = camVideo.videoWidth / camZoom;
+      const altoOrigen = camVideo.videoHeight / camZoom;
+      const xOrigen = (camVideo.videoWidth - anchoOrigen) / 2;
+      const yOrigen = (camVideo.videoHeight - altoOrigen) / 2;
+      ctx.drawImage(camVideo, xOrigen, yOrigen, anchoOrigen, altoOrigen, 0, 0, camCanvas.width, camCanvas.height);
+
+      let textoDecodificado = null;
+
+      // 1. Detector nativo del navegador (si está disponible): usa el motor
+      //    del sistema operativo, normalmente mucho más robusto con QR
+      //    densos, inclinados o algo borrosos.
+      if(window.__nativeBarcodeDetector){
+        try{
+          const resultados = await window.__nativeBarcodeDetector.detect(camCanvas);
+          if(resultados && resultados.length) textoDecodificado = resultados[0].rawValue;
+        }catch(e){ /* si falla, sigue con jsQR abajo */ }
+      }
+
+      // 2. ZBar-wasm (WebAssembly): motor distinto y muy robusto con QR
+      //    densos, inclinados o algo borrosos, cuando el nativo no está o falla.
+      if(!textoDecodificado && window.zbarWasm){
+        try{
+          const imageData = ctx.getImageData(0, 0, camCanvas.width, camCanvas.height);
+          const simbolos = await window.zbarWasm.scanImageData(imageData);
+          if(simbolos && simbolos.length){
+            // No usamos symbol.decode(): ZBar adivina mal la codificación (asume
+            // UTF-8/SJIS) y rompe tildes como Í/Ñ. Las cédulas panameñas vienen en
+            // Latin-1 (ISO-8859-1), así que decodificamos los bytes crudos nosotros.
+            const bytesQR = simbolos[0].data;
+            textoDecodificado = bytesQR
+              ? new TextDecoder('iso-8859-1').decode(bytesQR)
+              : simbolos[0].decode();
+          }
+        }catch(e){ /* si falla, sigue con jsQR abajo */ }
+      }
+
+      // 3. jsQR como último respaldo (siempre disponible, funciona en cualquier navegador)
+      if(!textoDecodificado && window.jsQR){
+        const imageData = ctx.getImageData(0, 0, camCanvas.width, camCanvas.height);
+        const code = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if(code && code.data) textoDecodificado = code.data;
+      }
+
+      camIntentos++;
+      const motores = [];
+      if(window.__nativeBarcodeDetector) motores.push('nativo');
+      if(window.zbarWasm) motores.push('zbar');
+      motores.push('jsQR');
+      const motor = motores.join('+');
+      statusCam.textContent = 'Escaneando (' + motor + ')… ' + camCanvas.width + 'x' + camCanvas.height + ' · intento #' + camIntentos;
+      statusCam.className = 'status';
+
+      if(textoDecodificado){
+        detenerCamaraQR();
+        grupoSalida.cerrar(2);
+        const rows = parseQrText(textoDecodificado);
+        const record = rowsToRecord(rows);
+        lookup(record['Cédula'], rows);
+        camOcupado = false;
+        return;
+      }
+    }
+    }catch(err){
+      statusCam.textContent = 'Error al leer la cámara: ' + (err && err.message ? err.message : err);
+      statusCam.className = 'status err';
+    }
+    camOcupado = false;
+    camRaf = requestAnimationFrame(tickCamQR);
+  }
+
+  const grupoSalida = crearGrupoExclusivo([
+    {
+      toggle: manualToggle, form: manualForm,
+      textoAbierto: 'Ocultar búsqueda manual',
+      textoCerrado: '¿No tiene código QR? Buscar por número de cédula',
+      alAbrir: () => id('mCedulaOut').focus()
+    },
+    {
+      toggle: mrzToggle, form: mrzForm,
+      textoAbierto: 'Ocultar búsqueda por pasaporte',
+      textoCerrado: '¿Es extranjero? Buscar por pasaporte (MRZ)',
+      alAbrir: () => mrzText.focus()
+    },
+    {
+      toggle: camToggle, form: camForm,
+      textoAbierto: 'Ocultar cámara',
+      textoCerrado: '📷 Usar cámara para leer QR',
+      alAbrir: () => {
+        cargarJsQR().catch(() => {});
+        cargarZbarWasm().catch(() => {});
+        iniciarCamaraQR();
+      },
+      alCerrar: () => {
+        detenerCamaraQR();
+        camZoom = 1;
+        aplicarZoomVisual();
+      }
+    }
+  ]);
+
+  id('btnManualCancelOut').addEventListener('click', () => {
+    id('mCedulaOut').value = '';
+    grupoSalida.cerrar(0);
+  });
+
+  id('btnManualSubmitOut').addEventListener('click', () => {
+    const cedula = id('mCedulaOut').value.trim();
+    if(!cedula){
+      setStatus('Escribe un número de cédula para buscar.', 'err');
+      return;
+    }
+    lookup(cedula, null);
+    id('mCedulaOut').value = '';
+    grupoSalida.cerrar(0);
+  });
+
+  /* --- Búsqueda por pasaporte MRZ (extranjeros) --- */
+  id('btnMrzCancelOut').addEventListener('click', () => {
+    mrzText.value = '';
+    statusMrz.textContent = '';
+    grupoSalida.cerrar(1);
+  });
+
+  id('btnMrzSubmitOut').addEventListener('click', () => {
+    const rows = parseMRZ(mrzText.value);
+    if(!rows){
+      statusMrz.textContent = 'No se pudo leer el MRZ. Verifica que sean las 2 líneas completas del pasaporte.';
+      statusMrz.className = 'status err';
+      return;
+    }
+    const record = rowsToRecord(rows);
+    statusMrz.textContent = '';
+    mrzText.value = '';
+    grupoSalida.cerrar(1);
+    lookup(record['Cédula'], rows);
+  });
+
+  /* --- OCR por cámara para el MRZ (mejor esfuerzo: rellena el texto para revisar) --- */
+  const mrzCamToggle = id('mrzCamToggleOut');
+  const mrzCamBlock = id('mrzCamBlockOut');
+  const mrzCamVideo = id('mrzCamVideoOut');
+  const mrzCamCanvas = id('mrzCamCanvasOut');
+  const statusMrzCam = id('statusMrzCamOut');
+  let mrzCamStream = null;
+  let mrzAutoSeq = 0;
+
+  async function escanearMrzEnVivo(seq){
+    while(mrzCamStream && seq === mrzAutoSeq){
+      try{
+        await reconocerCapturaMRZ(mrzCamVideo, mrzCamCanvas, mrzText, statusMrzCam, 'MRZ detectado.');
+        const rows = parseMRZ(mrzText.value);
+        const validacion = rows && rows.find(([k,v]) => k === 'Validación MRZ' && v === '3/3 dígitos correctos');
+        if(validacion){
+          const marco = mrzCamBlock.querySelector('.cam-frame.mrz');
+          if(marco) marco.classList.add('valid');
+          statusMrzCam.textContent = 'Documento leído correctamente ✓';
+          await new Promise(r => setTimeout(r, 450));
+          if(mrzCamStream) mrzCamStream.getTracks().forEach(t => t.stop());
+          mrzCamStream = null; mrzAutoSeq++;
+          document.body.classList.remove('mrz-live');
+          mrzCamBlock.classList.remove('mrz-live-panel');
+          mrzCamBlock.classList.add('hidden');
+          id('btnMrzSubmitOut').click();
+          return;
+        }
+      }catch(err){
+        statusMrzCam.textContent = 'Buscando las líneas MRZ… Mantén el documento dentro del marco.';
+        statusMrzCam.className = 'status';
+      }
+      await new Promise(r => setTimeout(r, 350));
+    }
+  }
+
+  mrzCamToggle.addEventListener('click', async () => {
+    const abriendo = mrzCamBlock.classList.contains('hidden');
+    if(abriendo){
+      mrzCamBlock.classList.remove('hidden');
+      mrzCamToggle.textContent = 'Ocultar cámara';
+      try{
+        statusMrzCam.textContent = 'Solicitando acceso a la cámara…';
+        mrzCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+        mrzCamVideo.srcObject = mrzCamStream;
+        await mrzCamVideo.play();
+        document.body.classList.add('mrz-live');
+        mrzCamBlock.classList.add('mrz-live-panel');
+        statusMrzCam.textContent = 'Buscando las líneas MRZ…';
+        statusMrzCam.className = 'status';
+        mrzAutoSeq++;
+        escanearMrzEnVivo(mrzAutoSeq);
+      }catch(err){
+        statusMrzCam.textContent = 'No se pudo acceder a la cámara (revisa permisos o que la página esté en HTTPS).';
+        statusMrzCam.className = 'status err';
+      }
+    }else{
+      mrzAutoSeq++;
+      if(mrzCamStream){ mrzCamStream.getTracks().forEach(t => t.stop()); mrzCamStream = null; }
+      document.body.classList.remove('mrz-live');
+      mrzCamBlock.classList.remove('mrz-live-panel');
+      mrzCamBlock.classList.add('hidden');
+      mrzCamToggle.textContent = '📷 Usar cámara (OCR)';
+    }
+  });
+
+  id('btnMrzCamCaptureOut').addEventListener('click', () => {
+    if(!mrzCamBlock.classList.contains('hidden')) mrzCamToggle.click();
+  });
+
+  btnConfirm.addEventListener('click', () => {
+    if(!lastCedula) return;
+    const db = loadDb();
+    const record = db[lastCedula];
+    if(!record) return;
+
+    const salidaTs = Date.now();
+    const entradaTs = record.entradaTs || salidaTs;
+    const durMs = salidaTs - entradaTs;
+
+    record.estado = 'retirado';
+    record.horaSalida = new Date(salidaTs).toLocaleString('es-PA');
+    record.salidaTs = salidaTs;
+    record.duracionMin = Math.round(durMs / 60000);
+    record.duracionTexto = formatDuration(durMs);
+    db[lastCedula] = record;
+    saveDb(db);
+    updateInsideCount();
+    renderQueue();
+
+    const historial = loadHistorial();
+    historial.push({
+      cedula: lastCedula,
+      nombre: fullName(record),
+      horaEntrada: record.horaEntrada || '',
+      horaSalida: record.horaSalida,
+      entradaTs: entradaTs,
+      salidaTs: salidaTs,
+      duracionMin: record.duracionMin,
+      duracionTexto: record.duracionTexto,
+      tipoVisita: record.tipoVisita || 'NORMAL'
+    });
+    saveHistorial(historial);
+
+    addEvento({
+      tipo: 'salida',
+      cedula: lastCedula,
+      nombre: fullName(record),
+      hora: record.horaSalida,
+      ts: salidaTs,
+      duracionMin: record.duracionMin,
+      duracionTexto: record.duracionTexto,
+      tipoVisita: record.tipoVisita || 'NORMAL'
+    });
+    renderDashboard();
+
+    const name = fullName(record);
+    id('thanksNameOut').textContent = name
+      ? 'Hasta luego, ' + name
+      : 'Salida registrada';
+    id('thanksSubOut').textContent =
+      'Estuviste dentro ' + record.duracionTexto + '.';
+    mostrarConfirmacionSalida();
+  });
+
+  let thanksTimeoutOut = null;
+  function reiniciarSalida(){
+    if(thanksTimeoutOut){ clearTimeout(thanksTimeoutOut); thanksTimeoutOut = null; }
+    qrInput.value = '';
+    resultBlock.classList.add('hidden');
+    btnConfirm.classList.add('hidden');
+    setStatus('Coloca el cursor en el campo y escanea.');
+    thanksCard.classList.add('hidden');
+    scanCard.classList.remove('hidden');
+    id('mCedulaOut').value = '';
+    grupoSalida.cerrar(0);
+    mrzText.value = '';
+    statusMrz.textContent = '';
+    grupoSalida.cerrar(1);
+    grupoSalida.cerrar(2);
+    if(mrzCamStream){ mrzCamStream.getTracks().forEach(t => t.stop()); mrzCamStream = null; }
+    mrzCamBlock.classList.add('hidden');
+    mrzCamToggle.textContent = '📷 Usar cámara (OCR)';
+    qrInput.focus();
+  }
+  function mostrarConfirmacionSalida(){
+    scanCard.classList.add('hidden');
+    thanksCard.classList.remove('hidden');
+    if(thanksTimeoutOut) clearTimeout(thanksTimeoutOut);
+    thanksTimeoutOut = setTimeout(reiniciarSalida, 4000);
+  }
+
+  id('btnAgainOut').addEventListener('click', reiniciarSalida);
+
+  salidaModules[suffix || 'normal'] = { qrInput, resultBlock, thanksCard, manualForm, btnConfirm, mrzForm, camForm };
+}
+
+initSalidaModule('', 'NORMAL', 'Salida', 'Salida VIP');
+initSalidaModule('Vip', 'VIP', 'Salida VIP', 'Salida');
+
+const qrInputOut = salidaModules.normal.qrInput;
+const resultBlockOut = salidaModules.normal.resultBlock;
+const thanksCardOut = salidaModules.normal.thanksCard;
+const manualFormOut = salidaModules.normal.manualForm;
+const mrzFormOut = salidaModules.normal.mrzForm;
+
+/* ---------- INIT ---------- */
+window.addEventListener('load', () => {
+  updateInsideCount();
+  renderQueue();
+  inicializarRangoExportacion();
+  renderDashboard();
+  qrInputIn.focus();
+});
+document.addEventListener('click', e => {
+  if(e.target.tagName === 'BUTTON' || e.target.classList.contains('tab')) return;
+  if(e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION' || e.target.tagName === 'LABEL') return;
+  if(e.target.closest('.manual-form') || e.target.classList.contains('manual-toggle') || e.target.classList.contains('cam-mini-toggle')) return;
+  if(e.target.closest('#resultBlockIn') || e.target.closest('#resultBlockOut')) return;
+  if(e.target.closest('#resultBlockInVip') || e.target.closest('#resultBlockOutVip')) return;
+  if(!panelEntrada.classList.contains('hidden') && thanksCardIn.classList.contains('hidden') && manualFormIn.classList.contains('hidden') && mrzFormIn.classList.contains('hidden') && entradaModules.normal.camForm.classList.contains('hidden')){
+    qrInputIn.focus();
+  }
+  if(!panelSalida.classList.contains('hidden') && thanksCardOut.classList.contains('hidden') && manualFormOut.classList.contains('hidden') && mrzFormOut.classList.contains('hidden') && salidaModules.normal.camForm.classList.contains('hidden')){
+    qrInputOut.focus();
+  }
+  if(!panelEntradaVip.classList.contains('hidden') && entradaModules.Vip.thanksCard.classList.contains('hidden') && entradaModules.Vip.manualForm.classList.contains('hidden') && entradaModules.Vip.mrzForm.classList.contains('hidden') && entradaModules.Vip.camForm.classList.contains('hidden')){
+    entradaModules.Vip.qrInput.focus();
+  }
+  if(!panelSalidaVip.classList.contains('hidden') && salidaModules.Vip.thanksCard.classList.contains('hidden') && salidaModules.Vip.manualForm.classList.contains('hidden') && salidaModules.Vip.mrzForm.classList.contains('hidden') && salidaModules.Vip.camForm.classList.contains('hidden')){
+    salidaModules.Vip.qrInput.focus();
+  }
+});
+
+</script>
+</body>
+</html>
